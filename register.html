@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - MoveOut Market</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- Header -->
+        <header class="auth-header">
+            <div class="logo">
+                <h2>MoveOut Market</h2>
+                <span class="tagline">Your Moving Sale Solution</span>
+            </div>
+        </header>
+
+        <!-- Registration Form -->
+        <div class="auth-form-container">
+            <div class="auth-card">
+                <div class="auth-header-text">
+                    <h1>Create Account</h1>
+                    <p>Join thousands of users who trust us for their moving sales</p>
+                </div>
+
+                <form id="registerForm" class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input 
+                                type="text" 
+                                id="firstName" 
+                                name="firstName" 
+                                class="form-control" 
+                                placeholder="First name"
+                                required
+                            >
+                            <span class="error-message" id="firstNameError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input 
+                                type="text" 
+                                id="lastName" 
+                                name="lastName" 
+                                class="form-control" 
+                                placeholder="Last name"
+                                required
+                            >
+                            <span class="error-message" id="lastNameError"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="registerEmail" 
+                            name="email" 
+                            class="form-control" 
+                            placeholder="Enter your email"
+                            required
+                        >
+                        <span class="error-message" id="regEmailError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            name="phone" 
+                            class="form-control" 
+                            placeholder="+91 XXXXX XXXXX"
+                            required
+                        >
+                        <span class="error-message" id="phoneError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">City</label>
+                        <select id="location" name="location" class="form-control" required>
+                            <option value="">Select your city</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Gurgaon">Gurgaon</option>
+                        </select>
+                        <span class="error-message" id="locationError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="registerPassword" 
+                                name="password" 
+                                class="form-control" 
+                                placeholder="Create a strong password"
+                                required
+                            >
+                            <button type="button" class="password-toggle" id="toggleRegPassword">
+                                <span class="eye-icon">👁️</span>
+                            </button>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-meter">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                            <span class="strength-text" id="strengthText">Password strength</span>
+                        </div>
+                        <span class="error-message" id="regPasswordError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            class="form-control" 
+                            placeholder="Confirm your password"
+                            required
+                        >
+                        <span class="error-message" id="confirmPasswordError"></span>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="acceptTerms" name="terms" required>
+                        <label for="acceptTerms">
+                            I agree to the <a href="#terms" class="auth-link">Terms of Service</a> 
+                            and <a href="#privacy" class="auth-link">Privacy Policy</a>
+                        </label>
+                        <span class="error-message" id="termsError"></span>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="newsletter" name="newsletter">
+                        <label for="newsletter">
+                            Send me updates about new features and tips
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn--primary btn--full">
+                        Create Account
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+
+                    <div class="social-login">
+                        <button type="button" class="btn btn--outline btn--full social-btn">
+                            <span class="social-icon">📧</span>
+                            Continue with Google
+                        </button>
+                    </div>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="login.html" class="auth-link">Sign in here</a></p>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="success-message" id="successMessage" style="display: none;">
+                <div class="success-card">
+                    <span class="success-icon">✅</span>
+                    <h3>Account Created Successfully!</h3>
+                    <p>Welcome to MoveOut Market. You can now start listing your items.</p>
+                    <button class="btn btn--primary" onclick="window.location.href='index.html'">
+                        Go to Homepage
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

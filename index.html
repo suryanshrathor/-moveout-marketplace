@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoveOut Market - Buy & Sell Items During Relocation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <h2>MoveOut Market</h2>
+                    <span class="tagline">Your Moving Sale Solution</span>
+                </div>
+                
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search items..." class="form-control">
+                        <button type="button" id="searchBtn" class="btn btn--primary">
+                            <span class="search-icon">🔍</span> Search
+                        </button>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="filter-section">
+                        <select id="categoryFilter" class="form-control">
+                            <option value="">All Categories</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Appliances">Appliances</option>
+                            <option value="Books">Books</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Sports">Sports</option>
+                        </select>
+                        
+                        <select id="locationFilter" class="form-control">
+                            <option value="">All Locations</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                        </select>
+                        
+                        <select id="conditionFilter" class="form-control">
+                            <option value="">All Conditions</option>
+                            <option value="New">New</option>
+                            <option value="Like New">Like New</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Header Actions -->
+                <div class="header-actions">
+                    <button id="postItemBtn" class="btn btn--primary">
+                        <span class="plus-icon">+</span> Post Item
+                    </button>
+                    <button id="loginBtn" class="btn btn--outline">Login</button>
+                    <button id="registerBtn" class="btn btn--secondary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Sell Your Items Before You Move</h1>
+                <p>The easiest way to sell your belongings during relocation. Connect with local buyers and make your move lighter and profitable!</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">1000+</span>
+                        <span class="stat-label">Items Sold</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Happy Users</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">15+</span>
+                        <span class="stat-label">Cities</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">
+            <h2 class="section-title">Browse by Category</h2>
+            <div class="category-grid">
+                <div class="category-card" data-category="Electronics">
+                    <div class="category-icon">📱</div>
+                    <h3>Electronics</h3>
+                    <p>Phones, Laptops, Gaming</p>
+                </div>
+                <div class="category-card" data-category="Furniture">
+                    <div class="category-icon">🪑</div>
+                    <h3>Furniture</h3>
+                    <p>Tables, Chairs, Beds</p>
+                </div>
+                <div class="category-card" data-category="Appliances">
+                    <div class="category-icon">🏠</div>
+                    <h3>Appliances</h3>
+                    <p>Kitchen, Home Appliances</p>
+                </div>
+                <div class="category-card" data-category="Books">
+                    <div class="category-icon">📚</div>
+                    <h3>Books</h3>
+                    <p>Textbooks, Novels</p>
+                </div>
+                <div class="category-card" data-category="Clothing">
+                    <div class="category-icon">👕</div>
+                    <h3>Clothing</h3>
+                    <p>Formal, Casual Wear</p>
+                </div>
+                <div class="category-card" data-category="Sports">
+                    <div class="category-icon">⚽</div>
+                    <h3>Sports</h3>
+                    <p>Equipment, Gear</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Items -->
+    <section class="featured-items">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Featured Items</h2>
+                <div class="sort-options">
+                    <select id="sortSelect" class="form-control">
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Items Grid -->
+            <div id="itemsGrid" class="items-grid">
+                <!-- Items will be loaded here by JavaScript -->
+            </div>
+            
+            <!-- Load More Button -->
+            <div class="load-more-section">
+                <button id="loadMoreBtn" class="btn btn--outline">Load More Items</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>MoveOut Market</h3>
+                    <p>Making relocation easier by connecting sellers with local buyers.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Help</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#">Electronics</a></li>
+                        <li><a href="#">Furniture</a></li>
+                        <li><a href="#">Appliances</a></li>
+                        <li><a href="#">Books</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Instagram</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MoveOut Market. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/homepage.js"></script>
+</body>
+</html>

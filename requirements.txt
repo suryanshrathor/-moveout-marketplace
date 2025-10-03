@@ -1,0 +1,8 @@
+# Frontend Only - No requirements needed
+# Uncomment below if you want to add Flask backend later
+
+# Flask==3.0.0
+# Werkzeug==3.0.1
+# itsdangerous==2.1.2
+# Jinja2==3.1.4
+# python-dotenv==1.0.0

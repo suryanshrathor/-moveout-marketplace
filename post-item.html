@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Item - MoveOut Market</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html" style="text-decoration: none; color: inherit;">
+                        <h2>MoveOut Market</h2>
+                        <span class="tagline">Your Moving Sale Solution</span>
+                    </a>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="backToHomeBtn" class="btn btn--outline">
+                        ← Back to Home
+                    </button>
+                    <button id="myItemsBtn" class="btn btn--secondary">My Items</button>
+                    <button id="logoutBtn" class="btn btn--outline">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Post Item Form Section -->
+    <section class="post-item-section">
+        <div class="container">
+            <div class="post-item-container">
+                <div class="post-item-header">
+                    <h1>📦 Post Your Item</h1>
+                    <p>List your item quickly and reach local buyers instantly</p>
+                </div>
+
+                <div class="post-item-content">
+                    <div class="post-item-form-container">
+                        <form id="postItemForm" class="post-item-form">
+                            <!-- Basic Information -->
+                            <div class="form-section">
+                                <h3 class="section-title">📋 Basic Information</h3>
+                                
+                                <div class="form-group">
+                                    <label for="itemTitle">Item Title *</label>
+                                    <input 
+                                        type="text" 
+                                        id="itemTitle" 
+                                        name="title" 
+                                        class="form-control" 
+                                        placeholder="e.g., MacBook Pro 13-inch M1, Study Table with Chair"
+                                        required
+                                        maxlength="100"
+                                    >
+                                    <span class="char-counter">0/100</span>
+                                    <span class="error-message" id="titleError"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="itemDescription">Description *</label>
+                                    <textarea 
+                                        id="itemDescription" 
+                                        name="description" 
+                                        class="form-control" 
+                                        placeholder="Describe your item in detail. Include condition, age, reason for selling, any accessories included..."
+                                        required
+                                        rows="4"
+                                        maxlength="500"
+                                    ></textarea>
+                                    <span class="char-counter">0/500</span>
+                                    <span class="error-message" id="descriptionError"></span>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="itemCategory">Category *</label>
+                                        <select id="itemCategory" name="category" class="form-control" required>
+                                            <option value="">Select category</option>
+                                            <option value="Electronics">📱 Electronics</option>
+                                            <option value="Furniture">🪑 Furniture</option>
+                                            <option value="Appliances">🏠 Appliances</option>
+                                            <option value="Books">📚 Books</option>
+                                            <option value="Clothing">👕 Clothing</option>
+                                            <option value="Sports">⚽ Sports</option>
+                                            <option value="Other">🔧 Other</option>
+                                        </select>
+                                        <span class="error-message" id="categoryError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="itemCondition">Condition *</label>
+                                        <select id="itemCondition" name="condition" class="form-control" required>
+                                            <option value="">Select condition</option>
+                                            <option value="New">🆕 New - Never used</option>
+                                            <option value="Like New">✨ Like New - Barely used</option>
+                                            <option value="Excellent">⭐ Excellent - Great condition</option>
+                                            <option value="Good">👍 Good - Normal wear</option>
+                                            <option value="Fair">👌 Fair - Some wear</option>
+                                            <option value="Poor">⚠️ Poor - Heavy wear</option>
+                                        </select>
+                                        <span class="error-message" id="conditionError"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pricing -->
+                            <div class="form-section">
+                                <h3 class="section-title">💰 Pricing</h3>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="itemPrice">Price (₹) *</label>
+                                        <div class="price-input-container">
+                                            <span class="currency-symbol">₹</span>
+                                            <input 
+                                                type="number" 
+                                                id="itemPrice" 
+                                                name="price" 
+                                                class="form-control price-input" 
+                                                placeholder="0"
+                                                min="1"
+                                                max="10000000"
+                                                required
+                                            >
+                                        </div>
+                                        <span class="price-suggestion" id="priceSuggestion"></span>
+                                        <span class="error-message" id="priceError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="priceNegotiable">Price Negotiable?</label>
+                                        <div class="checkbox-group">
+                                            <input type="checkbox" id="priceNegotiable" name="negotiable">
+                                            <label for="priceNegotiable">Yes, price is negotiable</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="form-section">
+                                <h3 class="section-title">📍 Location</h3>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="itemLocation">City *</label>
+                                        <select id="itemLocation" name="location" class="form-control" required>
+                                            <option value="">Select your city</option>
+                                            <option value="Bangalore">Bangalore</option>
+                                            <option value="Mumbai">Mumbai</option>
+                                            <option value="Delhi">Delhi</option>
+                                            <option value="Pune">Pune</option>
+                                            <option value="Chennai">Chennai</option>
+                                            <option value="Hyderabad">Hyderabad</option>
+                                            <option value="Kolkata">Kolkata</option>
+                                            <option value="Gurgaon">Gurgaon</option>
+                                            <option value="Noida">Noida</option>
+                                            <option value="Ahmedabad">Ahmedabad</option>
+                                        </select>
+                                        <span class="error-message" id="locationError"></span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="itemArea">Area/Locality</label>
+                                        <input 
+                                            type="text" 
+                                            id="itemArea" 
+                                            name="area" 
+                                            class="form-control" 
+                                            placeholder="e.g., Koramangala, Bandra, Connaught Place"
+                                            maxlength="50"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Images -->
+                            <div class="form-section">
+                                <h3 class="section-title">📸 Images</h3>
+                                
+                                <div class="form-group">
+                                    <label for="itemImages">Upload Images</label>
+                                    <div class="image-upload-container">
+                                        <div class="image-upload-area" id="uploadTrigger">
+                                            <div class="upload-icon">📷</div>
+                                            <p>Click to upload images</p>
+                                            <span class="upload-hint">Upload up to 5 images (JPG, PNG, max 5MB each)</span>
+                                        </div>
+                                        <input type="file" id="itemImages" name="images" accept="image/*" multiple style="display: none;">
+                                        <div id="imagePreview" class="image-preview-container"></div>
+                                    </div>
+                                    <span class="error-message" id="imagesError"></span>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="form-section">
+                                <h3 class="section-title">📞 Contact Information</h3>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="sellerName">Your Name *</label>
+                                        <input 
+                                            type="text" 
+                                            id="sellerName" 
+                                            name="sellerName" 
+                                            class="form-control" 
+                                            placeholder="Enter your name"
+                                            required
+                                            readonly
+                                        >
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="sellerPhone">Phone Number *</label>
+                                        <input 
+                                            type="tel" 
+                                            id="sellerPhone" 
+                                            name="sellerPhone" 
+                                            class="form-control" 
+                                            placeholder="+91 XXXXX XXXXX"
+                                            required
+                                            readonly
+                                        >
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="preferredContact">Preferred Contact Method</label>
+                                    <div class="radio-group">
+                                        <div class="radio-option">
+                                            <input type="radio" id="contactWhatsApp" name="preferredContact" value="whatsapp" checked>
+                                            <label for="contactWhatsApp">💬 WhatsApp</label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" id="contactCall" name="preferredContact" value="call">
+                                            <label for="contactCall">📞 Phone Call</label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" id="contactBoth" name="preferredContact" value="both">
+                                            <label for="contactBoth">📱 Both</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Submit -->
+                            <div class="form-section">
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="agreeTerms" name="terms" required>
+                                    <label for="agreeTerms">
+                                        I agree to the <a href="#terms" class="auth-link">Terms of Service</a> 
+                                        and confirm that all information provided is accurate
+                                    </label>
+                                    <span class="error-message" id="termsError"></span>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" id="previewBtn" class="btn btn--outline">
+                                        👀 Preview Listing
+                                    </button>
+                                    <button type="submit" class="btn btn--primary">
+                                        🚀 Post Item
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Posting Tips -->
+                    <div class="posting-tips">
+                        <h3>💡 Tips for Better Sales</h3>
+                        <div class="tips-grid">
+                            <div class="tip-card">
+                                <span class="tip-icon">📷</span>
+                                <div>
+                                    <h4>Good Photos</h4>
+                                    <p>Take clear, well-lit photos from multiple angles</p>
+                                </div>
+                            </div>
+                            <div class="tip-card">
+                                <span class="tip-icon">💰</span>
+                                <div>
+                                    <h4>Fair Pricing</h4>
+                                    <p>Research similar items to set competitive prices</p>
+                                </div>
+                            </div>
+                            <div class="tip-card">
+                                <span class="tip-icon">📝</span>
+                                <div>
+                                    <h4>Detailed Description</h4>
+                                    <p>Include condition, age, and reason for selling</p>
+                                </div>
+                            </div>
+                            <div class="tip-card">
+                                <span class="tip-icon">⚡</span>
+                                <div>
+                                    <h4>Quick Response</h4>
+                                    <p>Reply to interested buyers promptly</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal container - Modals will be created here by JavaScript -->
+    <div id="modal-container"></div>
+
+    <script src="js/post-item.js"></script>
+</body>
+</html>

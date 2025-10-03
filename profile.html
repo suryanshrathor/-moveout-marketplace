@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - MoveOut Market</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="profile-page">
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html" style="text-decoration: none; color: inherit;">
+                        <h2>MoveOut Market</h2>
+                        <span class="tagline">Your Moving Sale Solution</span>
+                    </a>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="backToHomeBtn" class="btn btn--outline">
+                        ← Back to Home
+                    </button>
+                    <button id="myItemsBtn" class="btn btn--secondary">📋 My Items</button>
+                    <div class="notification-container">
+                        <button id="notificationBtn" class="notification-bell">
+                            <span class="bell-icon">🔔</span>
+                            <span id="notificationCount" class="notification-badge">0</span>
+                        </button>
+                        <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
+                            <div class="dropdown-header">
+                                <h4>Notifications</h4>
+                                <button id="markAllReadBtn" class="mark-read-btn">Mark all read</button>
+                            </div>
+                            <div id="notificationList" class="notification-list">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                            <div class="dropdown-footer">
+                                <button id="clearNotificationsBtn" class="clear-btn">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="userMenuBtn" class="btn btn--secondary">Hi, User</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Page -->
+    <section class="profile-section">
+        <div class="container">
+            <div class="profile-container">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-title">
+                        <h1>👤 My Profile</h1>
+                        <p>Manage your account settings and view your marketplace activity</p>
+                    </div>
+                </div>
+
+                <!-- Profile Grid -->
+                <div class="profile-grid">
+                    <!-- Left Column - Profile Info -->
+                    <div class="profile-left">
+                        <!-- Profile Card -->
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <h2>Profile Information</h2>
+                                <button id="editProfileBtn" class="btn btn--outline btn--small">Edit</button>
+                            </div>
+                            <div class="profile-content">
+                                <div class="avatar-section">
+                                    <div class="avatar-container">
+                                        <div id="userAvatar" class="user-avatar">👤</div>
+                                        <button id="changeAvatarBtn" class="change-avatar-btn">📷</button>
+                                    </div>
+                                    <div class="avatar-info">
+                                        <h3 id="userName">Loading...</h3>
+                                        <p id="userEmail">Loading...</p>
+                                        <span id="memberSince" class="member-since">Member since: Oct 2024</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Phone:</span>
+                                        <span id="userPhone" class="detail-value">Loading...</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Location:</span>
+                                        <span id="userLocation" class="detail-value">Loading...</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Items Posted:</span>
+                                        <span id="totalItemsPosted" class="detail-value">0</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Items Sold:</span>
+                                        <span id="totalItemsSold" class="detail-value">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Settings -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h2>Quick Settings</h2>
+                            </div>
+                            <div class="settings-content">
+                                <!-- <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Dark Mode</h4>
+                                        <p>Switch to dark theme</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="darkModeToggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div> -->
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Email Notifications</h4>
+                                        <p>Receive updates via email</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="emailNotificationsToggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Push Notifications</h4>
+                                        <p>Get instant notifications</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pushNotificationsToggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Analytics & Activity -->
+                    <div class="profile-right">
+                        <!-- Analytics Overview -->
+                        <div class="analytics-card">
+                            <div class="analytics-header">
+                                <h2>📊 Account Analytics</h2>
+                                <div class="analytics-period">
+                                    <select id="analyticsPeriod">
+                                        <option value="7">Last 7 days</option>
+                                        <option value="30">Last 30 days</option>
+                                        <option value="90">Last 90 days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Stats Grid -->
+                            <div class="analytics-stats">
+                                <div class="stat-item">
+                                    <div class="stat-icon">📈</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalViewsAnalytics">0</div>
+                                        <div class="stat-label">Total Views</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-item">
+                                    <div class="stat-icon">💬</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalInquiriesAnalytics">0</div>
+                                        <div class="stat-label">Inquiries</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-item">
+                                    <div class="stat-icon">💰</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="totalEarningsAnalytics">₹0</div>
+                                        <div class="stat-label">Est. Earnings</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-item">
+                                    <div class="stat-icon">⭐</div>
+                                    <div class="stat-content">
+                                        <div class="stat-number" id="averageRatingAnalytics">4.8</div>
+                                        <div class="stat-label">Avg. Rating</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Views Chart -->
+                            <div class="chart-container">
+                                <h3>Daily Views Trend</h3>
+                                <canvas id="viewsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="activity-card">
+                            <div class="activity-header">
+                                <h2>🕒 Recent Activity</h2>
+                                <button id="viewAllActivityBtn" class="btn btn--outline btn--small">View All</button>
+                            </div>
+                            <div class="activity-content">
+                                <div id="recentActivityList" class="activity-list">
+                                    <!-- Activity items will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Account Actions -->
+                        <div class="account-actions-card">
+                            <div class="account-actions-header">
+                                <h2>⚙️ Account Actions</h2>
+                            </div>
+                            <div class="account-actions-content">
+                                <button id="changePasswordBtn" class="action-btn action-btn--secondary">
+                                    <span class="action-icon">🔐</span>
+                                    <div class="action-text">
+                                        <span class="action-title">Change Password</span>
+                                        <span class="action-desc">Update your account password</span>
+                                    </div>
+                                </button>
+                                
+                                <button id="exportDataBtn" class="action-btn action-btn--info">
+                                    <span class="action-icon">📥</span>
+                                    <div class="action-text">
+                                        <span class="action-title">Export Data</span>
+                                        <span class="action-desc">Download your marketplace data</span>
+                                    </div>
+                                </button>
+                                
+                                <button id="clearDataBtn" class="action-btn action-btn--warning">
+                                    <span class="action-icon">🗑️</span>
+                                    <div class="action-text">
+                                        <span class="action-title">Clear Local Data</span>
+                                        <span class="action-desc">Remove all local storage data</span>
+                                    </div>
+                                </button>
+                                
+                                <button id="deleteAccountBtn" class="action-btn action-btn--danger">
+                                    <span class="action-icon">⚠️</span>
+                                    <div class="action-text">
+                                        <span class="action-title">Delete Account</span>
+                                        <span class="action-desc">Permanently delete your account</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content edit-profile-modal">
+            <div class="modal-header">
+                <h2>✏️ Edit Profile</h2>
+                <button class="modal-close" onclick="closeEditProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm" class="edit-profile-form">
+                    <div class="form-group">
+                        <label for="editFirstName">First Name *</label>
+                        <input type="text" id="editFirstName" class="form-control" required maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editLastName">Last Name *</label>
+                        <input type="text" id="editLastName" class="form-control" required maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPhone">Phone Number *</label>
+                        <input type="tel" id="editPhone" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editDefaultLocation">Default Location</label>
+                        <select id="editDefaultLocation" class="form-control">
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Kolkata">Kolkata</option>
+                            <option value="Gurgaon">Gurgaon</option>
+                            <option value="Noida">Noida</option>
+                            <option value="Ahmedabad">Ahmedabad</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editBio">Bio (Optional)</label>
+                        <textarea id="editBio" class="form-control" rows="3" maxlength="200" placeholder="Tell others about yourself..."></textarea>
+                        <span class="char-counter">0/200</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeEditProfileModal()" class="btn btn--outline">Cancel</button>
+                <button onclick="saveProfileChanges()" class="btn btn--primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatarModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content avatar-modal">
+            <div class="modal-header">
+                <h2>📷 Choose Avatar</h2>
+                <button class="modal-close" onclick="closeAvatarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-options">
+                    <div class="avatar-option" data-avatar="👤">👤</div>
+                    <div class="avatar-option" data-avatar="👨">👨</div>
+                    <div class="avatar-option" data-avatar="👩">👩</div>
+                    <div class="avatar-option" data-avatar="🧑">🧑</div>
+                    <div class="avatar-option" data-avatar="👨‍💼">👨‍💼</div>
+                    <div class="avatar-option" data-avatar="👩‍💼">👩‍💼</div>
+                    <div class="avatar-option" data-avatar="👨‍🎓">👨‍🎓</div>
+                    <div class="avatar-option" data-avatar="👩‍🎓">👩‍🎓</div>
+                    <div class="avatar-option" data-avatar="👨‍💻">👨‍💻</div>
+                    <div class="avatar-option" data-avatar="👩‍💻">👩‍💻</div>
+                    <div class="avatar-option" data-avatar="🤵">🤵</div>
+                    <div class="avatar-option" data-avatar="👰">👰</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeAvatarModal()" class="btn btn--outline">Cancel</button>
+                <button onclick="saveAvatarSelection()" class="btn btn--primary">Save Avatar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content password-modal">
+            <div class="modal-header">
+                <h2>🔐 Change Password</h2>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password *</label>
+                        <input type="password" id="currentPassword" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword">New Password *</label>
+                        <input type="password" id="newPassword" class="form-control" required minlength="8">
+                        <small class="form-help">Password must be at least 8 characters long</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password *</label>
+                        <input type="password" id="confirmPassword" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closePasswordModal()" class="btn btn--outline">Cancel</button>
+                <button onclick="changePassword()" class="btn btn--primary">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/profile.js"></script>
+</body>
+</html>

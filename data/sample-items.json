@@ -1,0 +1,57 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "MacBook Pro 13-inch M1",
+      "description": "Excellent condition MacBook Pro with M1 chip. Used for 1 year.",
+      "price": 85000,
+      "category": "Electronics",
+      "location": "Bangalore",
+      "condition": "Like New",
+      "seller": "Raj Kumar",
+      "phone": "+91-9876543210",
+      "email": "raj.kumar@email.com",
+      "postedDate": "2024-10-01",
+      "status": "available"
+    },
+    {
+      "id": 2,
+      "title": "Study Table with Chair",
+      "description": "Wooden study table with matching chair. Great for students.",
+      "price": 3500,
+      "category": "Furniture",
+      "location": "Pune",
+      "condition": "Good",
+      "seller": "Priya Sharma",
+      "phone": "+91-8765432109",
+      "email": "priya.sharma@email.com",
+      "postedDate": "2024-09-30",
+      "status": "available"
+    }
+  ],
+  "categories": [
+    "Electronics",
+    "Furniture",
+    "Appliances",
+    "Books",
+    "Clothing",
+    "Sports"
+  ],
+  "cities": [
+    "Bangalore",
+    "Mumbai",
+    "Delhi",
+    "Pune",
+    "Chennai",
+    "Hyderabad",
+    "Kolkata"
+  ],
+  "conditions": [
+    "New",
+    "Like New",
+    "Excellent",
+    "Good",
+    "Fair",
+    "Poor"
+  ]
+}
