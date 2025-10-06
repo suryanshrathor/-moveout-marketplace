@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoveOut Market - Buy & Sell Items During Relocation</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -200,10 +203,25 @@
             </div>
         </div>
     </footer>
-    <!-- In index.html, post-item.html, my-items.html, profile.html -->
-    <script type="module" src="js/firebase-config.js"></script>
-    <script type="module" src="js/database-service.js"></script>
-    <script type="module" src="js/homepage.js"></script> <!-- or respective JS file -->
 
+    <!-- Firebase configuration (add before your JS files) -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKBMldILY0-P9L19ocOt-qapihB7LPUCU",
+            authDomain: "moveout-marketplace-9abf6.firebaseapp.com",
+            projectId: "moveout-marketplace-9abf6",
+            storageBucket: "moveout-marketplace-9abf6.firebasestorage.app",
+            messagingSenderId: "508633577907",
+            appId: "1:508633577907:web:15df862730971ff6cbf3c6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        console.log("Firebase initialized successfully");
+    </script>
+    <script src="js/homepage.js"></script>
 </body>
 </html>

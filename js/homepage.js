@@ -1,6 +1,5 @@
 // COMPLETE UPDATED homepage.js with WhatsApp Integration
 // Replace your entire js/homepage.js file with this
-import { dbService } from './database-service.js';
 
 // Sample data for demonstration
 const sampleItems = [
@@ -801,54 +800,19 @@ function showFilterNotification(message) {
     }, 3000);
 }
 
-// Load and display items
-// Replace loadItems function
+// Update your existing loadItems function
 async function loadItems() {
-    console.log('Loading items from Firebase...');
+    console.log('Loading items...');
     
-    // Show loading state
-    const itemsGrid = document.getElementById('itemsGrid');
-    if (itemsGrid) {
-        itemsGrid.innerHTML = '<div class="loading-message">Loading items...</div>';
-    }
-    
-    // Load from Firebase
-    allItems = await dbService.getAllItems();
-    
-    // Also get localStorage items as fallback
+    // Try Firebase first, fallback to localStorage
+    const firebaseItems = await loadFromFirebase();
     const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
     
-    // Merge and deduplicate
-    const mergedItems = [...allItems, ...localItems];
-    const uniqueItems = mergedItems.filter((item, index, self) => 
-        index === self.findIndex((t) => t.id === item.id)
-    );
+    // Combine both sources
+    allItems = [...firebaseItems, ...localItems];
     
-    allItems = uniqueItems;
-    console.log(`Loaded ${allItems.length} items`);
-    
-    // Apply filters and display
+    console.log(`Loaded ${allItems.length} total items`);
     applyFiltersAndSort();
-    
-    // Set up real-time updates
-    setupRealTimeUpdates();
-}
-
-// NEW: Real-time updates
-function setupRealTimeUpdates() {
-    console.log('Setting up real-time updates...');
-    
-    // Listen for changes
-    dbService.listenToItems((items) => {
-        console.log('Real-time update:', items.length, 'items');
-        allItems = items;
-        applyFiltersAndSort();
-        
-        // Show notification for new items
-        if (items.length > allItems.length) {
-            showToast('New items available!', 'info');
-        }
-    });
 }
 
 function loadMoreItems() {
@@ -1204,4 +1168,34 @@ function isLoggedIn() {
 function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     return userStr ? JSON.parse(userStr) : null;
+}
+
+// Firebase functions (add to end of homepage.js)
+async function saveToFirebase(itemData) {
+    try {
+        await db.collection('items').add({
+            ...itemData,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Saved to Firebase successfully");
+        return true;
+    } catch (error) {
+        console.error("Firebase save error:", error);
+        return false;
+    }
+}
+
+async function loadFromFirebase() {
+    try {
+        const snapshot = await db.collection('items').orderBy('timestamp', 'desc').get();
+        const firebaseItems = [];
+        snapshot.forEach(doc => {
+            firebaseItems.push({ id: doc.id, ...doc.data() });
+        });
+        console.log("Loaded from Firebase:", firebaseItems.length, "items");
+        return firebaseItems;
+    } catch (error) {
+        console.error("Firebase load error:", error);
+        return [];
+    }
 }

@@ -1,6 +1,4 @@
 // Complete My Items Dashboard JavaScript with WhatsApp Integration - js/my-items.js
-import { dbService } from './database-service.js';
-
 
 // Global variables
 let currentUserItems = [];
@@ -212,33 +210,30 @@ function updateHeaderForUser() {
     }
 }
 
-// Replace loadUserItems function
-async function loadUserItems() {
+function loadUserItems() {
+    console.log('Loading user items...');
+    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
     const currentUser = getCurrentUser();
+    
     if (!currentUser) return;
     
-    console.log('Loading user items from Firebase...');
+    // Filter items belonging to current user
+    currentUserItems = allItems.filter(item => item.sellerId === currentUser.id);
     
-    // Load from Firebase
-    const firebaseItems = await dbService.getUserItems(currentUser.id);
-    
-    // Load from localStorage as backup
-    const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]')
-        .filter(item => item.sellerId === currentUser.id);
-    
-    // Merge and deduplicate
-    const mergedItems = [...firebaseItems, ...localItems];
-    currentUserItems = mergedItems.filter((item, index, self) => 
-        index === self.findIndex((t) => t.id === item.id)
-    );
+    // Add mock view counts and inquiries if not present
+    currentUserItems = currentUserItems.map(item => ({
+        ...item,
+        views: item.views || Math.floor(Math.random() * 50) + 10,
+        inquiries: item.inquiries || Math.floor(Math.random() * 10),
+        status: item.status || 'available',
+        lastUpdated: item.lastUpdated || item.postedDate
+    }));
     
     console.log(`Found ${currentUserItems.length} user items`);
-    
     filteredItems = [...currentUserItems];
-    renderItemsGrid();
+    renderItems();
     updateStats();
 }
-
 
 function updateStats() {
     const totalItems = currentUserItems.length;
@@ -631,36 +626,33 @@ function toggleStatus(itemId) {
     updateItemStatus(itemId, newStatus);
 }
 
-// Update updateItemStatus function
-async function updateItemStatus(itemId, newStatus) {
-    const result = await dbService.updateItem(itemId, { status: newStatus });
+function updateItemStatus(itemId, newStatus) {
+    // Update in localStorage
+    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    const itemIndex = allItems.findIndex(item => item.id === itemId);
     
-    if (result.success) {
-        // Update localStorage
-        const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-        const itemIndex = localItems.findIndex(item => item.id === itemId);
-        if (itemIndex !== -1) {
-            localItems[itemIndex].status = newStatus;
-            localStorage.setItem('marketplaceItems', JSON.stringify(localItems));
+    if (itemIndex !== -1) {
+        allItems[itemIndex].status = newStatus;
+        allItems[itemIndex].lastUpdated = new Date().toISOString().split('T')[0];
+        localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
+        
+        // Update local array
+        const localIndex = currentUserItems.findIndex(item => item.id === itemId);
+        if (localIndex !== -1) {
+            currentUserItems[localIndex].status = newStatus;
+            currentUserItems[localIndex].lastUpdated = new Date().toISOString().split('T')[0];
         }
         
-        // Update current arrays
-        const updateArrays = (items) => {
-            const itemIndex = items.findIndex(item => item.id === itemId);
-            if (itemIndex !== -1) {
-                items[itemIndex].status = newStatus;
-            }
-        };
-        
-        updateArrays(currentUserItems);
-        updateArrays(filteredItems);
-        
-        renderItemsGrid();
+        renderItems();
         updateStats();
         
-        showToast(`Item marked as ${newStatus}!`, 'success');
-    } else {
-        showToast('Failed to update item status. Please try again.', 'error');
+        const statusText = newStatus === 'available' ? 'Available' : 
+                          newStatus === 'sold' ? 'Sold' : 'Hidden';
+        showSuccessMessage(`Item marked as ${statusText}`);
+        
+        // Add notification for profile system
+        const item = allItems[itemIndex];
+        addNotification('Item status changed', `Your item "${item.title}" is now ${statusText}`, 'post');
     }
 }
 
@@ -691,33 +683,30 @@ function duplicateItem(itemId) {
     addNotification('Item duplicated', `Your item "${item.title}" has been duplicated`, 'post');
 }
 
-// Update deleteItem function
-async function deleteItem(itemId) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+function deleteItem(itemId) {
+    const item = currentUserItems.find(item => item.id === itemId);
+    if (!item) return;
     
-    // Delete from Firebase
-    const result = await dbService.deleteItem(itemId);
-    
-    if (result.success) {
-        // Also remove from localStorage
-        const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-        const updatedItems = localItems.filter(item => item.id !== itemId);
-        localStorage.setItem('marketplaceItems', JSON.stringify(updatedItems));
-        
-        // Remove from current arrays
-        currentUserItems = currentUserItems.filter(item => item.id !== itemId);
-        filteredItems = filteredItems.filter(item => item.id !== itemId);
-        
-        // Re-render
-        renderItemsGrid();
-        updateStats();
-        
-        showToast('Item deleted successfully!', 'success');
-    } else {
-        showToast('Failed to delete item. Please try again.', 'error');
-    }
+    showConfirmModal(
+        '🗑️',
+        'Delete Item',
+        `Are you sure you want to delete "${item.title}"? This action cannot be undone.`,
+        () => {
+            // Remove from localStorage
+            const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+            const filteredItems = allItems.filter(item => item.id !== itemId);
+            localStorage.setItem('marketplaceItems', JSON.stringify(filteredItems));
+            
+            // Reload items
+            loadUserItems();
+            closeConfirmModal();
+            showSuccessMessage('Item deleted successfully');
+            
+            // Add notification for profile system
+            addNotification('Item deleted', `Your item "${item.title}" has been removed`, 'post');
+        }
+    );
 }
-
 
 function viewItem(itemId) {
     // Open item in homepage modal

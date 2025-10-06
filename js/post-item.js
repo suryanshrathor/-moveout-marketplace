@@ -1,5 +1,4 @@
 // Complete Updated post-item.js with WhatsApp Integration - Replace your entire file with this
-import { dbService } from './database-service.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Post item script loaded!');
@@ -700,41 +699,17 @@ function getRandomItemIcon(category) {
     return categoryIcons[Math.floor(Math.random() * categoryIcons.length)];
 }
 
-// function saveItemToStorage(itemData) {
-//     // Get existing items
-//     const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+// Update saveItemToStorage function in post-item.js
+function saveItemToStorage(itemData) {
+    // Save to localStorage (existing code)
+    const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    existingItems.unshift(itemData);
+    localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
     
-//     // Add new item
-//     existingItems.unshift(itemData); // Add to beginning
+    // Also save to Firebase
+    saveToFirebase(itemData);
     
-//     // Save back to storage
-//     localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
-    
-//     console.log('Item saved:', itemData);
-// }
-// Replace saveItemToStorage function
-async function saveItemToStorage(itemData) {
-    // Show loading
-    showToast('Saving item...', 'info');
-    
-    // Save to Firebase instead of localStorage
-    const result = await dbService.saveItem(itemData);
-    
-    if (result.success) {
-        console.log('Item saved to Firebase:', itemData);
-        showToast('Item posted successfully!', 'success');
-        
-        // Update the item with the Firebase ID
-        itemData.id = result.id;
-        
-        // Also save to localStorage as backup
-        const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-        existingItems.unshift(itemData);
-        localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
-    } else {
-        console.error('Failed to save item:', result.error);
-        showToast('Failed to post item. Please try again.', 'error');
-    }
+    console.log('Item saved:', itemData);
 }
 
 // UPDATED: showPreview to show actual uploaded images
