@@ -604,7 +604,7 @@ function submitItem() {
         // Simulate posting delay
         setTimeout(() => {
             // Save to localStorage
-            saveItemToStorage(formData);
+            saveItemWithSync(formData);
             
             // Show success modal with WhatsApp integration
             showSuccessModal(formData);
@@ -699,18 +699,34 @@ function getRandomItemIcon(category) {
     return categoryIcons[Math.floor(Math.random() * categoryIcons.length)];
 }
 
-// Update saveItemToStorage function in post-item.js
-function saveItemToStorage(itemData) {
-    // Save to localStorage (existing code)
-    const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    existingItems.unshift(itemData);
-    localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
+// Update your existing saveItemToStorage function
+// function saveItemToStorage(itemData) {
+//     // Save to localStorage (existing code)
+//     const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+//     existingItems.unshift(itemData);
+//     localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
     
-    // Also save to Firebase
-    saveToFirebase(itemData);
+//     // Also save to API
+//     saveItemToAPI(itemData);
     
-    console.log('Item saved:', itemData);
+//     console.log('Item saved:', itemData);
+// }
+
+
+// Add this after your existing saveItemToStorage function
+async function saveItemToAPI(itemData) {
+    try {
+        const result = await window.apiService.addItem(itemData);
+        if (result.success) {
+            console.log('Item saved to API');
+            return true;
+        }
+    } catch (error) {
+        console.error('API save failed:', error);
+    }
+    return false;
 }
+
 
 // UPDATED: showPreview to show actual uploaded images
 function showPreview() {
@@ -993,3 +1009,29 @@ function clearAllErrors() {
         element.style.display = 'none';
     });
 }
+
+// Update saveItemToStorage function
+async function saveItemWithSync(itemData) {
+    try {
+        // Save to localStorage first (immediate)
+        const existingItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+        existingItems.unshift(itemData);
+        localStorage.setItem('marketplaceItems', JSON.stringify(existingItems));
+        console.log('✅ Saved to localStorage');
+        
+        // Save to JSONBin (sync with others)
+        const result = await window.jsonBinService.addItem(itemData);
+        if (result.success) {
+            console.log('✅ Synced with JSONBin');
+        } else {
+            console.log('⚠️ JSONBin sync failed, item saved locally only');
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Save error:', error);
+        return false;
+    }
+}
+
+// Update your existing saveItemToStorage calls to use saveItemWithSync

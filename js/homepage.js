@@ -408,7 +408,7 @@ function loadAllItems() {
     // Sort by date (newest first)
     currentItems.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
     
-    loadItems();
+    loadItemsWithSync();
 }
 
 // Update header based on user login status
@@ -801,18 +801,33 @@ function showFilterNotification(message) {
 }
 
 // Update your existing loadItems function
-async function loadItems() {
-    console.log('Loading items...');
+// async function loadItems() {
+//     console.log('Loading items...');
     
-    // Try Firebase first, fallback to localStorage
-    const firebaseItems = await loadFromFirebase();
-    const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+//     // Try to load from API first, fallback to localStorage
+//     allItems = await loadItemsFromAPI();
     
-    // Combine both sources
-    allItems = [...firebaseItems, ...localItems];
-    
-    console.log(`Loaded ${allItems.length} total items`);
-    applyFiltersAndSort();
+//     console.log(`Loaded ${allItems.length} items`);
+//     applyFiltersAndSort();
+// }
+
+// Add this function to load items from API
+async function loadItemsFromAPI() {
+    try {
+        const apiItems = await window.apiService.getAllItems();
+        const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+        
+        // Merge and remove duplicates
+        const mergedItems = [...apiItems, ...localItems];
+        const uniqueItems = mergedItems.filter((item, index, self) => 
+            index === self.findIndex((t) => (t.id === item.id && t.title === item.title))
+        );
+        
+        return uniqueItems;
+    } catch (error) {
+        console.error('Error loading from API:', error);
+        return JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    }
 }
 
 function loadMoreItems() {
@@ -927,7 +942,7 @@ function performSearch() {
         item.seller.toLowerCase().includes(searchTerm)
     );
     
-    loadItems();
+    loadItemsWithSync();
 }
 
 // Filter functionality
@@ -953,7 +968,7 @@ function applyFilters() {
     
     currentItems = allItems;
     applySorting();
-    loadItems();
+    loadItemsWithSync();
 }
 
 // Sort functionality
@@ -1170,32 +1185,29 @@ function getCurrentUser() {
     return userStr ? JSON.parse(userStr) : null;
 }
 
-// Firebase functions (add to end of homepage.js)
-async function saveToFirebase(itemData) {
-    try {
-        await db.collection('items').add({
-            ...itemData,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("Saved to Firebase successfully");
-        return true;
-    } catch (error) {
-        console.error("Firebase save error:", error);
-        return false;
-    }
+// JSONBin Integration (add to end of homepage.js)
+async function loadItemsWithSync() {
+    console.log('Loading items with JSONBin sync...');
+    
+    // Load from JSONBin
+    const jsonBinItems = await window.jsonBinService.getAllItems();
+    
+    // Load from localStorage as backup
+    const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    
+    // Merge and remove duplicates
+    const mergedItems = [...jsonBinItems, ...localItems];
+    const uniqueItems = mergedItems.filter((item, index, self) => 
+        index === self.findIndex(t => t.id === item.id)
+    );
+    
+    allItems = uniqueItems;
+    console.log(`Total items loaded: ${allItems.length}`);
+    
+    applyFiltersAndSort();
 }
 
-async function loadFromFirebase() {
-    try {
-        const snapshot = await db.collection('items').orderBy('timestamp', 'desc').get();
-        const firebaseItems = [];
-        snapshot.forEach(doc => {
-            firebaseItems.push({ id: doc.id, ...doc.data() });
-        });
-        console.log("Loaded from Firebase:", firebaseItems.length, "items");
-        return firebaseItems;
-    } catch (error) {
-        console.error("Firebase load error:", error);
-        return [];
-    }
-}
+// Replace your existing loadItems function call
+// Change this line in your DOMContentLoaded:
+// loadItems(); // Replace with:
+// loadItemsWithSync();
