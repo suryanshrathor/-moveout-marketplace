@@ -168,6 +168,22 @@ const postItemBtn = document.getElementById('postItemBtn');
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
 
+
+// ── JSONBin Sync ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const binItems = await window.jsonBinService.getAllItems();
+    if (binItems.length) {
+      localStorage.setItem('marketplaceItems', JSON.stringify(binItems));
+      console.log('🔄 Synced', binItems.length, 'items from JSONBin');
+    }
+  } catch (e) {
+    console.warn('JSONBin sync failed:', e);
+  }
+  loadItems();  // your original loadItems()
+});
+// ───────────────────────────────────────────────────────────────
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     loadWhatsAppStyles(); // Load WhatsApp button styles
@@ -408,7 +424,7 @@ function loadAllItems() {
     // Sort by date (newest first)
     currentItems.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
     
-    loadItemsWithSync();
+    loadItems();
 }
 
 // Update header based on user login status
@@ -800,34 +816,11 @@ function showFilterNotification(message) {
     }, 3000);
 }
 
-// Update your existing loadItems function
-// async function loadItems() {
-//     console.log('Loading items...');
-    
-//     // Try to load from API first, fallback to localStorage
-//     allItems = await loadItemsFromAPI();
-    
-//     console.log(`Loaded ${allItems.length} items`);
-//     applyFiltersAndSort();
-// }
-
-// Add this function to load items from API
-async function loadItemsFromAPI() {
-    try {
-        const apiItems = await window.apiService.getAllItems();
-        const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-        
-        // Merge and remove duplicates
-        const mergedItems = [...apiItems, ...localItems];
-        const uniqueItems = mergedItems.filter((item, index, self) => 
-            index === self.findIndex((t) => (t.id === item.id && t.title === item.title))
-        );
-        
-        return uniqueItems;
-    } catch (error) {
-        console.error('Error loading from API:', error);
-        return JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    }
+// Load and display items
+function loadItems() {
+    currentPage = 0;
+    displayedItems = [];
+    loadMoreItems();
 }
 
 function loadMoreItems() {
@@ -942,7 +935,7 @@ function performSearch() {
         item.seller.toLowerCase().includes(searchTerm)
     );
     
-    loadItemsWithSync();
+    loadItems();
 }
 
 // Filter functionality
@@ -968,7 +961,7 @@ function applyFilters() {
     
     currentItems = allItems;
     applySorting();
-    loadItemsWithSync();
+    loadItems();
 }
 
 // Sort functionality
@@ -1184,30 +1177,3 @@ function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     return userStr ? JSON.parse(userStr) : null;
 }
-
-// JSONBin Integration (add to end of homepage.js)
-async function loadItemsWithSync() {
-    console.log('Loading items with JSONBin sync...');
-    
-    // Load from JSONBin
-    const jsonBinItems = await window.jsonBinService.getAllItems();
-    
-    // Load from localStorage as backup
-    const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    
-    // Merge and remove duplicates
-    const mergedItems = [...jsonBinItems, ...localItems];
-    const uniqueItems = mergedItems.filter((item, index, self) => 
-        index === self.findIndex(t => t.id === item.id)
-    );
-    
-    allItems = uniqueItems;
-    console.log(`Total items loaded: ${allItems.length}`);
-    
-    applyFiltersAndSort();
-}
-
-// Replace your existing loadItems function call
-// Change this line in your DOMContentLoaded:
-// loadItems(); // Replace with:
-// loadItemsWithSync();

@@ -212,7 +212,7 @@ function updateHeaderForUser() {
 
 function loadUserItems() {
     console.log('Loading user items...');
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    const allItems = jsonBinService.getAllItems().catch(() => []);
     const currentUser = getCurrentUser();
     
     if (!currentUser) return;
