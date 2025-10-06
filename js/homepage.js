@@ -1,5 +1,6 @@
 // COMPLETE UPDATED homepage.js with WhatsApp Integration
 // Replace your entire js/homepage.js file with this
+import { dbService } from './database-service.js';
 
 // Sample data for demonstration
 const sampleItems = [
@@ -801,10 +802,53 @@ function showFilterNotification(message) {
 }
 
 // Load and display items
-function loadItems() {
-    currentPage = 0;
-    displayedItems = [];
-    loadMoreItems();
+// Replace loadItems function
+async function loadItems() {
+    console.log('Loading items from Firebase...');
+    
+    // Show loading state
+    const itemsGrid = document.getElementById('itemsGrid');
+    if (itemsGrid) {
+        itemsGrid.innerHTML = '<div class="loading-message">Loading items...</div>';
+    }
+    
+    // Load from Firebase
+    allItems = await dbService.getAllItems();
+    
+    // Also get localStorage items as fallback
+    const localItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    
+    // Merge and deduplicate
+    const mergedItems = [...allItems, ...localItems];
+    const uniqueItems = mergedItems.filter((item, index, self) => 
+        index === self.findIndex((t) => t.id === item.id)
+    );
+    
+    allItems = uniqueItems;
+    console.log(`Loaded ${allItems.length} items`);
+    
+    // Apply filters and display
+    applyFiltersAndSort();
+    
+    // Set up real-time updates
+    setupRealTimeUpdates();
+}
+
+// NEW: Real-time updates
+function setupRealTimeUpdates() {
+    console.log('Setting up real-time updates...');
+    
+    // Listen for changes
+    dbService.listenToItems((items) => {
+        console.log('Real-time update:', items.length, 'items');
+        allItems = items;
+        applyFiltersAndSort();
+        
+        // Show notification for new items
+        if (items.length > allItems.length) {
+            showToast('New items available!', 'info');
+        }
+    });
 }
 
 function loadMoreItems() {
