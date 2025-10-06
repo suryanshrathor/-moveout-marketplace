@@ -2,7 +2,7 @@
 class JSONBinService {
     constructor() {
         // Replace with your actual values
-        this.binId = '68e341b943b1c97be95be886'; // From JSONBin URL
+        this.binId = '68e36b4843b1c97be95c0557'; // From JSONBin URL
         this.apiKey = '$2a$10$5r7RfPJuvTy7CAjOluJgV.NfRRMIv/Kvg0cntE6kpQsbShRnNuTha'; // From account settings
         this.baseUrl = 'https://api.jsonbin.io/v3/b';
     }
@@ -35,7 +35,7 @@ class JSONBinService {
     async saveAllItems(items) {
         try {
             console.log('Saving items to JSONBin:', items.length, 'items');
-            const response = await fetch(`${this.baseUrl}/${this.binId}`, {
+            const response = await fetch(`${this.baseUrl}/${this.binId}/latest`, { // <-- fixed
                 method: 'PUT',
                 headers: {
                     'X-Master-Key': this.apiKey,
@@ -48,10 +48,12 @@ class JSONBinService {
             });
             
             if (response.ok) {
-                console.log('Items saved successfully to JSONBin');
+                console.log('✅ Items saved successfully to JSONBin');
                 return true;
             } else {
-                console.error('JSONBin save error:', response.status, response.statusText);
+                console.error('❌ JSONBin save error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Response:', errorText);
                 return false;
             }
         } catch (error) {
@@ -59,6 +61,7 @@ class JSONBinService {
             return false;
         }
     }
+
 
     async addItem(newItem) {
         try {
