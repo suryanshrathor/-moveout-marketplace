@@ -1,5 +1,15 @@
 // Complete Updated post-item.js with WhatsApp Integration - Replace your entire file with this
 
+// ── JSONBin Sync ─────────────────────────────────────────────
+if (window.jsonBinService) {
+  jsonBinService.addItem = jsonBinService.addItem.bind(jsonBinService);
+  console.log('JSONBin service ready:', jsonBinService.binId);
+} else {
+  console.warn('JSONBin service not loaded');
+}
+// ───────────────────────────────────────────────────────────────
+
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Post item script loaded!');
     initializePostItemPage();
@@ -372,7 +382,6 @@ function setupImageUpload() {
     const uploadTrigger = document.getElementById('uploadTrigger');
     const previewContainer = document.getElementById('imagePreview');
     
-    // Store uploaded images globally
     window.uploadedImages = [];
     
     if (!imageInput || !uploadTrigger || !previewContainer) {
@@ -382,62 +391,83 @@ function setupImageUpload() {
     
     console.log('Setting up image upload...');
     
-    // Click trigger to open file dialog
     uploadTrigger.addEventListener('click', function() {
         console.log('Upload area clicked');
         imageInput.click();
     });
     
-    imageInput.addEventListener('change', function(e) {
+    imageInput.addEventListener('change', async function(e) {
         console.log('Files selected:', e.target.files);
         const files = Array.from(e.target.files);
         
-        // Validate number of images
         if (files.length > 5) {
             showError('imagesError', 'You can upload maximum 5 images');
             return;
         }
         
-        // Clear previous previews and stored images
         previewContainer.innerHTML = '';
         window.uploadedImages = [];
         clearError('imagesError');
         
         if (files.length === 0) return;
         
-        files.forEach((file, index) => {
-            // Validate file size (5MB)
+        for (const file of files) {
             if (file.size > 5 * 1024 * 1024) {
                 showError('imagesError', `Image ${file.name} is too large. Maximum size is 5MB`);
-                return;
+                continue;
             }
             
-            // Validate file type
             if (!file.type.startsWith('image/')) {
                 showError('imagesError', `${file.name} is not a valid image file`);
-                return;
+                continue;
             }
             
-            // Create preview and store image
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imageData = e.target.result;
+            // Compress image
+            const compressedData = await compressImage(file, 0.7, 800); // 70% quality, max 800px
+            
+            // Store compressed image
+            window.uploadedImages.push({
+                name: file.name,
+                data: compressedData,
+                size: compressedData.length
+            });
+            
+            // Create preview
+            const previewItem = createImagePreview(compressedData, window.uploadedImages.length - 1, file.name);
+            previewContainer.appendChild(previewItem);
+            
+            console.log(`Image ${file.name} processed and stored`);
+        }
+    });
+}
+
+// New: Image compression function
+async function compressImage(file, quality, maxSize) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
                 
-                // Store the image data
-                window.uploadedImages.push({
-                    name: file.name,
-                    data: imageData,
-                    size: file.size
-                });
+                // Resize if larger than maxSize
+                if (width > maxSize || height > maxSize) {
+                    const ratio = Math.min(maxSize / width, maxSize / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
                 
-                // Create preview
-                const previewItem = createImagePreview(imageData, index, file.name);
-                previewContainer.appendChild(previewItem);
-                
-                console.log(`Image ${index + 1} processed and stored`);
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
             };
-            reader.readAsDataURL(file);
-        });
+        };
+        reader.readAsDataURL(file);
     });
 }
 
@@ -590,7 +620,7 @@ function validateForm() {
     return isValid;
 }
 
-function submitItem() {
+async function submitItem() {
     console.log('Submitting item...');
     const formData = collectFormData();
     
@@ -601,10 +631,9 @@ function submitItem() {
         submitBtn.textContent = '⏳ Posting...';
         submitBtn.disabled = true;
         
-        // Simulate posting delay
-        setTimeout(() => {
-            // Save to localStorage
-            saveItemToStorage(formData);
+        try {
+            // Save to storage (local and JSONBin)
+            const result = await saveItemToStorage(formData);
             
             // Show success modal with WhatsApp integration
             showSuccessModal(formData);
@@ -625,8 +654,12 @@ function submitItem() {
             
             // Add notification
             addNotification('Item posted', `Your item "${formData.title}" has been posted successfully`, 'post');
-            
-        }, 2000);
+        } catch (error) {
+            console.error('Error submitting item:', error);
+            showToast('Failed to post item. Please try again.', 'error');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }
     }
 }
 
@@ -699,16 +732,29 @@ function getRandomItemIcon(category) {
     return categoryIcons[Math.floor(Math.random() * categoryIcons.length)];
 }
 
-function saveItemToStorage(itemData) {
+async function saveItemToStorage(itemData) {
+    // Save to localStorage
     const existing = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
     existing.unshift(itemData);
     localStorage.setItem('marketplaceItems', JSON.stringify(existing));
 
-    // Then sync to JSONBin
+    // Sync to JSONBin
     if (window.jsonBinService) {
-        jsonBinService.addItem(itemData)
-            .then(res => console.log('JSONBin addItem result:', res))
-            .catch(err => console.warn('JSONBin addItem error:', err));
+        try {
+            const result = await jsonBinService.addItem(itemData);
+            console.log('JSONBin addItem result:', result);
+            if (!result.success) {
+                showToast('Failed to sync item with cloud storage. Item saved locally.', 'error');
+            }
+            return result;
+        } catch (error) {
+            console.warn('JSONBin addItem error:', error);
+            showToast('Error syncing with cloud storage. Item saved locally.', 'error');
+            return { success: false, error: error.message };
+        }
+    } else {
+        showToast('Cloud storage service unavailable. Item saved locally.', 'error');
+        return { success: false, error: 'JSONBin service not loaded' };
     }
 }
 
@@ -789,13 +835,13 @@ function closePreview() {
 }
 
 // FIXED: submitFromPreview function
-function submitFromPreview() {
+async function submitFromPreview() {
     console.log('Submit from preview clicked');
     closePreview(); // Close the preview modal first
     
     // Small delay to ensure modal is closed
-    setTimeout(() => {
-        submitItem(); // Then submit the item
+    setTimeout(async () => {
+        await submitItem(); // Submit the item asynchronously
     }, 100);
 }
 

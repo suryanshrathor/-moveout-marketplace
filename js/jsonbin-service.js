@@ -21,9 +21,11 @@ class JSONBinService {
             if (response.ok) {
                 const data = await response.json();
                 console.log('JSONBin response:', data);
-                return data.record.items || [];
+                return data.record?.items || [];
             } else {
                 console.error('JSONBin fetch error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Response:', errorText);
                 return [];
             }
         } catch (error) {
@@ -35,7 +37,7 @@ class JSONBinService {
     async saveAllItems(items) {
         try {
             console.log('Saving items to JSONBin:', items.length, 'items');
-            const response = await fetch(`${this.baseUrl}/${this.binId}/latest`, { // <-- fixed
+            const response = await fetch(`${this.baseUrl}/${this.binId}`, { // Fixed: Removed /latest
                 method: 'PUT',
                 headers: {
                     'X-Master-Key': this.apiKey,
@@ -54,6 +56,9 @@ class JSONBinService {
                 console.error('❌ JSONBin save error:', response.status, response.statusText);
                 const errorText = await response.text();
                 console.error('Response:', errorText);
+                if (response.status === 404) {
+                    console.error('Bin not found. Please verify the bin ID:', this.binId);
+                }
                 return false;
             }
         } catch (error) {
@@ -61,7 +66,6 @@ class JSONBinService {
             return false;
         }
     }
-
 
     async addItem(newItem) {
         try {
@@ -75,14 +79,13 @@ class JSONBinService {
             
             // Save back
             const success = await this.saveAllItems(items);
-            return success ? { success: true, id: newItem.id } : { success: false };
+            return success ? { success: true, id: newItem.id } : { success: false, error: 'Failed to save item to JSONBin' };
         } catch (error) {
             console.error('Error adding item to JSONBin:', error);
-            return { success: false };
+            return { success: false, error: error.message };
         }
     }
 
-    // Test connection
     async testConnection() {
         try {
             console.log('Testing JSONBin connection...');
@@ -97,7 +100,9 @@ class JSONBinService {
                 console.log('✅ JSONBin connection successful!');
                 return true;
             } else {
-                console.error('❌ JSONBin connection failed:', response.status);
+                console.error('❌ JSONBin connection failed:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Response:', errorText);
                 return false;
             }
         } catch (error) {
