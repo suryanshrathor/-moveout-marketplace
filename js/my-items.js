@@ -1,11 +1,11 @@
-// Complete My Items Dashboard JavaScript with WhatsApp Integration - js/my-items.js
-
 // Global variables
 let currentUserItems = [];
 let filteredItems = [];
 let currentPage = 1;
 let itemsPerPage = 6;
 let editingItemId = null;
+let cachedAllItems = null;
+let cachedUserItems = null;
 
 // Initialize the My Items page
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,6 +13,54 @@ document.addEventListener('DOMContentLoaded', function() {
     loadWhatsAppStyles(); // Load WhatsApp button styles
     initializeMyItemsPage();
 });
+
+// Toast Notification
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.error('Toast container not found');
+        showErrorMessage('Cannot show notification: container not found');
+        return;
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <span class="toast-icon">${getToastIcon(type)}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('toast--removing');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+function getToastIcon(type) {
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    return icons[type] || 'ℹ️';
+}
+
+// Redirect showSuccessMessage and showErrorMessage to showToast
+function showSuccessMessage(message) {
+    showToast(message, 'success');
+}
+
+function showErrorMessage(message) {
+    showToast(message, 'error');
+}
 
 // Load WhatsApp styles
 function loadWhatsAppStyles() {
@@ -83,6 +131,37 @@ function loadWhatsAppStyles() {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
     }
+
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideInRight 0.3s ease;
+    }
+
+    .toast--success { background: #10b981; color: white; }
+    .toast--error { background: #ef4444; color: white; }
+    .toast--warning { background: #f59e0b; color: white; }
+    .toast--info { background: #3b82f6; color: white; }
+    .toast--removing { animation: slideOutRight 0.3s ease; }
+    .toast-content { display: flex; align-items: center; gap: 8px; }
+    .toast-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
     `;
     
     const styleSheet = document.createElement('style');
@@ -91,11 +170,12 @@ function loadWhatsAppStyles() {
 }
 
 // WHATSAPP INTEGRATION FUNCTIONS
-
-// Quick WhatsApp share for items
 function shareItemOnWhatsApp(itemId) {
     const item = getItemById(itemId);
-    if (!item) return;
+    if (!item) {
+        showToast('Item not found for sharing', 'error');
+        return;
+    }
     
     const message = `Check out my item on MoveOut Market:
 
@@ -132,13 +212,12 @@ function showWhatsAppToast() {
     }, 3000);
 }
 
-// Copy item link for sharing
 function copyItemLink(itemId) {
     const itemUrl = `${window.location.origin}/index.html#item-${itemId}`;
     
     if (navigator.clipboard) {
         navigator.clipboard.writeText(itemUrl).then(() => {
-            showSuccessMessage('Link copied to clipboard! Share it anywhere.');
+            showToast('Link copied to clipboard! Share it anywhere.', 'success');
         }).catch(() => {
             fallbackCopyText(itemUrl);
         });
@@ -155,24 +234,22 @@ function fallbackCopyText(text) {
     textArea.select();
     try {
         document.execCommand('copy');
-        showSuccessMessage('Link copied!');
+        showToast('Link copied!', 'success');
     } catch (err) {
-        alert('Could not copy link. Please copy manually: ' + text);
+        showToast('Could not copy link. Please copy manually: ' + text, 'error');
     }
     document.body.removeChild(textArea);
 }
 
-// Utility function for WhatsApp integration
 function getItemById(itemId) {
-    return currentUserItems.find(item => item.id == itemId);
+    return currentUserItems.find(item => String(item.id) === String(itemId));
 }
 
 // END WHATSAPP INTEGRATION
 
 function initializeMyItemsPage() {
-    // Check if user is logged in
     if (!isLoggedIn()) {
-        alert('Please login to access your items');
+        showToast('Please login to access your items', 'error');
         window.location.href = 'login.html';
         return;
     }
@@ -184,43 +261,83 @@ function initializeMyItemsPage() {
 }
 
 function setupEventListeners() {
-    // Header actions
-    document.getElementById('backToHomeBtn').addEventListener('click', () => {
-        window.location.href = 'index.html';
-    });
+    const backBtn = document.getElementById('backToHomeBtn');
+    if (backBtn) backBtn.addEventListener('click', () => window.location.href = 'index.html');
     
-    document.getElementById('postItemBtn').addEventListener('click', goToPostItem);
-    document.getElementById('postNewItemBtn').addEventListener('click', goToPostItem);
-    document.getElementById('userMenuBtn').addEventListener('click', showUserMenu);
+    const postItemBtn = document.getElementById('postItemBtn');
+    if (postItemBtn) postItemBtn.addEventListener('click', goToPostItem);
     
-    // Search and filters
-    document.getElementById('itemSearch').addEventListener('input', debounce(filterItems, 300));
-    document.getElementById('statusFilter').addEventListener('change', filterItems);
-    document.getElementById('categoryFilter').addEventListener('change', filterItems);
-    document.getElementById('viewMode').addEventListener('change', changeViewMode);
+    const postNewItemBtn = document.getElementById('postNewItemBtn');
+    if (postNewItemBtn) postNewItemBtn.addEventListener('click', goToPostItem);
     
-    // Bulk actions
-    document.getElementById('bulkActionsBtn').addEventListener('click', showBulkActions);
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    if (userMenuBtn) userMenuBtn.addEventListener('click', showUserMenu);
+    
+    const itemSearch = document.getElementById('itemSearch');
+    if (itemSearch) itemSearch.addEventListener('input', debounce(filterItems, 300));
+    
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) statusFilter.addEventListener('change', filterItems);
+    
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter) categoryFilter.addEventListener('change', filterItems);
+    
+    const viewMode = document.getElementById('viewMode');
+    if (viewMode) viewMode.addEventListener('change', changeViewMode);
+    
+    const bulkActionsBtn = document.getElementById('bulkActionsBtn');
+    if (bulkActionsBtn) bulkActionsBtn.addEventListener('click', showBulkActions);
 }
 
 function updateHeaderForUser() {
     const currentUser = getCurrentUser();
     if (currentUser) {
-        document.getElementById('userMenuBtn').textContent = `Hi, ${currentUser.firstName}`;
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        if (userMenuBtn) userMenuBtn.textContent = `Hi, ${currentUser.firstName}`;
     }
 }
 
-function loadUserItems() {
+async function loadUserItems() {
     console.log('Loading user items...');
-    const allItems = jsonBinService.getAllItems().catch(() => []);
     const currentUser = getCurrentUser();
+    if (!currentUser) {
+        console.error('No current user found');
+        showErrorMessage('Please log in to view your items');
+        return;
+    }
+    console.log('Current user ID:', currentUser.id);
     
-    if (!currentUser) return;
+    let allItems = [];
+    try {
+        if (cachedAllItems) {
+            console.log('Using cached items');
+            allItems = cachedAllItems;
+        } else {
+            const response = await jsonBinService.getAllItems();
+            console.log('Raw JSONBin response:', JSON.stringify(response, null, 2));
+            allItems = Array.isArray(response) ? response : response?.record?.items || [];
+            if (!Array.isArray(allItems)) {
+                console.error('JSONBin response is not an array:', allItems);
+                allItems = [];
+            }
+            cachedAllItems = allItems;
+            localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
+        }
+    } catch (error) {
+        console.error('Error fetching items from JSONBin:', error);
+        showToast('Failed to load items from cloud storage', 'error');
+        allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    }
     
-    // Filter items belonging to current user
-    currentUserItems = allItems.filter(item => item.sellerId === currentUser.id);
+    if (cachedUserItems && cachedUserItems.length > 0) {
+        console.log('Using cached user items');
+        currentUserItems = cachedUserItems;
+    } else {
+        currentUserItems = allItems.filter(item => String(item.sellerId) === String(currentUser.id));
+        cachedUserItems = currentUserItems;
+    }
+    console.log(`Found ${currentUserItems.length} user items`, currentUserItems);
     
-    // Add mock view counts and inquiries if not present
     currentUserItems = currentUserItems.map(item => ({
         ...item,
         views: item.views || Math.floor(Math.random() * 50) + 10,
@@ -229,10 +346,10 @@ function loadUserItems() {
         lastUpdated: item.lastUpdated || item.postedDate
     }));
     
-    console.log(`Found ${currentUserItems.length} user items`);
     filteredItems = [...currentUserItems];
     renderItems();
     updateStats();
+    return currentUserItems;
 }
 
 function updateStats() {
@@ -241,40 +358,51 @@ function updateStats() {
     const soldItems = currentUserItems.filter(item => item.status === 'sold').length;
     const totalViews = currentUserItems.reduce((sum, item) => sum + (item.views || 0), 0);
     
-    document.getElementById('totalItemsCount').textContent = totalItems;
-    document.getElementById('activeItemsCount').textContent = activeItems;
-    document.getElementById('soldItemsCount').textContent = soldItems;
-    document.getElementById('totalViewsCount').textContent = totalViews;
+    const totalItemsCount = document.getElementById('totalItemsCount');
+    if (totalItemsCount) totalItemsCount.textContent = totalItems;
+    
+    const activeItemsCount = document.getElementById('activeItemsCount');
+    if (activeItemsCount) activeItemsCount.textContent = activeItems;
+    
+    const soldItemsCount = document.getElementById('soldItemsCount');
+    if (soldItemsCount) soldItemsCount.textContent = soldItems;
+    
+    const totalViewsCount = document.getElementById('totalViewsCount');
+    if (totalViewsCount) totalViewsCount.textContent = totalViews;
 }
 
 function renderItems() {
     const container = document.getElementById('myItemsGrid');
     const emptyState = document.getElementById('emptyState');
+    const paginationContainer = document.getElementById('paginationContainer');
+    
+    if (!container || !emptyState || !paginationContainer) {
+        console.error('Required DOM elements missing');
+        showToast('Page structure error. Please refresh.', 'error');
+        return;
+    }
     
     if (filteredItems.length === 0) {
         container.style.display = 'none';
         emptyState.style.display = 'block';
-        document.getElementById('paginationContainer').style.display = 'none';
+        paginationContainer.style.display = 'none';
         return;
     }
     
     emptyState.style.display = 'none';
     container.style.display = 'grid';
     
-    // Calculate pagination
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const pageItems = filteredItems.slice(startIndex, endIndex);
     
-    // Render items
     container.innerHTML = '';
     pageItems.forEach(item => {
         const itemCard = createMyItemCard(item);
         container.appendChild(itemCard);
     });
     
-    // Update pagination
     updatePagination(totalPages);
 }
 
@@ -283,24 +411,20 @@ function createMyItemCard(item) {
     card.className = 'my-item-card';
     card.dataset.itemId = item.id;
     
-    // Determine image display
     let imageDisplay;
-    if (item.images && item.images.length > 0) {
+    if (item.images && item.images.length > 0 && item.images[0].data) {
         const imageCount = item.images.length > 1 ? 
             `<div class="image-count-badge">${item.images.length} photos</div>` : '';
         imageDisplay = `
             <div class="item-image-container">
-                <img src="${item.images[0].data}" alt="${item.title}">
+                <img src="${item.images[0].data}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/150?text=${item.category}'">
                 ${imageCount}
             </div>`;
     } else {
-        imageDisplay = `<div class="item-emoji-image">${item.image}</div>`;
+        imageDisplay = `<div class="item-image-container"><img src="https://via.placeholder.com/150?text=${item.category}" alt="${item.title}"></div>`;
     }
     
-    // Status badge
     const statusBadge = getStatusBadge(item.status);
-    
-    // Time since posted
     const timeAgo = getTimeAgo(item.postedDate);
     
     card.innerHTML = `
@@ -325,15 +449,13 @@ function createMyItemCard(item) {
                 <span class="stat-item">👁️ ${item.views} views</span>
                 <span class="stat-item">💬 ${item.inquiries} inquiries</span>
             </div>
-            
-            <!-- WhatsApp Quick Share Section -->
-            <div class="item-whatsapp-section" style="margin: 12px 0; padding: 8px; background: #323434; border-radius: 6px;">
-                <p style="font-size: 0.75rem; color: #fbf9f9ff; margin: 0 0 6px 0;">Share with potential buyers:</p>
+            <div class="item-whatsapp-section" style="margin: 12px 0; padding: 8px; background: #f0f9ff; border-radius: 6px;">
+                <p style="font-size: 0.75rem; color: #0ea5e9; margin: 0 0 6px 0;">Share with potential buyers:</p>
                 <div style="display: flex; gap: 8px;">
-                    <button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp(${item.id})" title="Share on WhatsApp">
+                    <button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp('${item.id}')" title="Share on WhatsApp">
                         💬 WhatsApp
                     </button>
-                    <button class="btn btn--outline btn--small" onclick="copyItemLink(${item.id})" title="Copy link to share">
+                    <button class="btn btn--outline btn--small" onclick="copyItemLink('${item.id}')" title="Copy link to share">
                         📋 Copy Link
                     </button>
                 </div>
@@ -341,24 +463,24 @@ function createMyItemCard(item) {
         </div>
         <div class="item-actions-section">
             <div class="item-actions">
-                <button class="action-btn edit-btn" onclick="editItem(${item.id})" title="Edit Item">
+                <button class="action-btn edit-btn" onclick="editItem('${item.id}')" title="Edit Item">
                     ✏️
                 </button>
-                <button class="action-btn status-btn" onclick="toggleStatus(${item.id})" title="Change Status">
+                <button class="action-btn status-btn" onclick="toggleStatus('${item.id}')" title="Change Status">
                     ${item.status === 'available' ? '✅' : item.status === 'sold' ? '💰' : '👁️'}
                 </button>
-                <button class="action-btn duplicate-btn" onclick="duplicateItem(${item.id})" title="Duplicate Item">
+                <button class="action-btn duplicate-btn" onclick="duplicateItem('${item.id}')" title="Duplicate Item">
                     📋
                 </button>
-                <button class="action-btn delete-btn" onclick="deleteItem(${item.id})" title="Delete Item">
+                <button class="action-btn delete-btn" onclick="deleteItem('${item.id}')" title="Delete Item">
                     🗑️
                 </button>
             </div>
             <div class="item-quick-actions">
-                <button class="btn btn--small btn--outline" onclick="viewItem(${item.id})">
+                <button class="btn btn--small btn--outline" onclick="viewItem('${item.id}')">
                     View Details
                 </button>
-                <button class="btn btn--small btn--primary" onclick="boostItem(${item.id})">
+                <button class="btn btn--small btn--primary" onclick="boostItem('${item.id}')">
                     🚀 Boost
                 </button>
             </div>
@@ -391,9 +513,9 @@ function getTimeAgo(dateString) {
 }
 
 function filterItems() {
-    const search = document.getElementById('itemSearch').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const categoryFilter = document.getElementById('categoryFilter').value;
+    const search = document.getElementById('itemSearch')?.value.toLowerCase() || '';
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
     
     filteredItems = currentUserItems.filter(item => {
         const matchesSearch = !search || 
@@ -406,12 +528,13 @@ function filterItems() {
         return matchesSearch && matchesStatus && matchesCategory;
     });
     
-    currentPage = 1; // Reset to first page
+    currentPage = 1;
     renderItems();
 }
 
 function updatePagination(totalPages) {
     const paginationContainer = document.getElementById('paginationContainer');
+    if (!paginationContainer) return;
     
     if (totalPages <= 1) {
         paginationContainer.style.display = 'none';
@@ -419,22 +542,25 @@ function updatePagination(totalPages) {
     }
     
     paginationContainer.style.display = 'flex';
-    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    const pageInfo = document.getElementById('pageInfo');
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
     
-    document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+    if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
     
-    // Add click events if not already added
-    if (!document.getElementById('prevPageBtn').onclick) {
-        document.getElementById('prevPageBtn').onclick = () => {
+    if (prevPageBtn && !prevPageBtn.onclick) {
+        prevPageBtn.onclick = () => {
             if (currentPage > 1) {
                 currentPage--;
                 renderItems();
             }
         };
-        
-        document.getElementById('nextPageBtn').onclick = () => {
-            const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+    }
+    
+    if (nextPageBtn && !nextPageBtn.onclick) {
+        nextPageBtn.onclick = () => {
             if (currentPage < totalPages) {
                 currentPage++;
                 renderItems();
@@ -443,11 +569,13 @@ function updatePagination(totalPages) {
     }
 }
 
-// Item Actions
 function editItem(itemId) {
     console.log('Editing item:', itemId);
-    const item = currentUserItems.find(item => item.id === itemId);
-    if (!item) return;
+    const item = currentUserItems.find(item => String(item.id) === String(itemId));
+    if (!item) {
+        showToast('Item not found locally', 'error');
+        return;
+    }
     
     editingItemId = itemId;
     showEditModal(item);
@@ -455,22 +583,30 @@ function editItem(itemId) {
 
 function showEditModal(item) {
     const modal = document.getElementById('editItemModal');
-    const form = document.getElementById('editItemForm');
+    if (!modal) {
+        console.error('Edit modal not found');
+        showToast('Cannot edit item: modal not found', 'error');
+        return;
+    }
     
-    // Populate edit form
+    const form = document.getElementById('editItemForm');
+    if (!form) {
+        console.error('Edit form not found');
+        showToast('Cannot edit item: form not found', 'error');
+        return;
+    }
+    
     form.innerHTML = `
         <div class="form-group">
             <label for="editTitle">Title *</label>
             <input type="text" id="editTitle" value="${item.title}" class="form-control" required maxlength="100">
             <span class="char-counter">0/100</span>
         </div>
-        
         <div class="form-group">
             <label for="editDescription">Description *</label>
-            <textarea id="editDescription" class="form-control" rows="4" required maxlength="500">${item.description}</textarea>
-            <span class="char-counter">0/500</span>
+            <textarea id="editDescription" class="form-control" rows="4" required maxlength="150">${item.description}</textarea>
+            <span class="char-counter">0/150</span>
         </div>
-        
         <div class="form-row">
             <div class="form-group">
                 <label for="editPrice">Price (₹) *</label>
@@ -488,7 +624,6 @@ function showEditModal(item) {
                 </select>
             </div>
         </div>
-        
         <div class="form-row">
             <div class="form-group">
                 <label for="editCategory">Category *</label>
@@ -509,7 +644,7 @@ function showEditModal(item) {
                     <option value="Mumbai" ${item.location === 'Mumbai' ? 'selected' : ''}>Mumbai</option>
                     <option value="Delhi" ${item.location === 'Delhi' ? 'selected' : ''}>Delhi</option>
                     <option value="Pune" ${item.location === 'Pune' ? 'selected' : ''}>Pune</option>
-                    <option value="Chennai" ${item.location === 'Chennai' ? 'selected' : ''}>Chennai</option>
+                    <option value="Chennai" ${item.location === 'Chennai' ? 'selected' : ''}>Chennai</</option>
                     <option value="Hyderabad" ${item.location === 'Hyderabad' ? 'selected' : ''}>Hyderabad</option>
                     <option value="Kolkata" ${item.location === 'Kolkata' ? 'selected' : ''}>Kolkata</option>
                     <option value="Gurgaon" ${item.location === 'Gurgaon' ? 'selected' : ''}>Gurgaon</option>
@@ -518,7 +653,6 @@ function showEditModal(item) {
                 </select>
             </div>
         </div>
-        
         <div class="form-group">
             <label for="editStatus">Status</label>
             <select id="editStatus" class="form-control">
@@ -527,16 +661,13 @@ function showEditModal(item) {
                 <option value="hidden" ${item.status === 'hidden' ? 'selected' : ''}>Hidden</option>
             </select>
         </div>
-        
         <div class="form-group checkbox-group">
             <input type="checkbox" id="editNegotiable" ${item.negotiable ? 'checked' : ''}>
             <label for="editNegotiable">Price is negotiable</label>
         </div>
     `;
     
-    // Setup character counters
     setupEditCharCounters();
-    
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -547,14 +678,18 @@ function setupEditCharCounters() {
     
     if (titleInput) {
         const counter = titleInput.parentElement.querySelector('.char-counter');
-        updateCharCounter(titleInput, counter);
-        titleInput.addEventListener('input', () => updateCharCounter(titleInput, counter));
+        if (counter) {
+            updateCharCounter(titleInput, counter);
+            titleInput.addEventListener('input', () => updateCharCounter(titleInput, counter));
+        }
     }
     
     if (descInput) {
         const counter = descInput.parentElement.querySelector('.char-counter');
-        updateCharCounter(descInput, counter);
-        descInput.addEventListener('input', () => updateCharCounter(descInput, counter));
+        if (counter) {
+            updateCharCounter(descInput, counter);
+            descInput.addEventListener('input', () => updateCharCounter(descInput, counter));
+        }
     }
 }
 
@@ -565,215 +700,403 @@ function updateCharCounter(input, counter) {
     counter.textContent = `${current}/${max}`;
 }
 
-function saveItemChanges() {
-    if (!editingItemId) return;
-    
-    // Get form values
-    const updatedData = {
-        title: document.getElementById('editTitle').value.trim(),
-        description: document.getElementById('editDescription').value.trim(),
-        price: parseFloat(document.getElementById('editPrice').value),
-        condition: document.getElementById('editCondition').value,
-        category: document.getElementById('editCategory').value,
-        location: document.getElementById('editLocation').value,
-        status: document.getElementById('editStatus').value,
-        negotiable: document.getElementById('editNegotiable').checked,
-        lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    // Validate
-    if (!updatedData.title || !updatedData.description || !updatedData.price) {
-        alert('Please fill in all required fields');
+async function saveItemChanges() {
+    if (!editingItemId) {
+        showToast('No item selected for editing', 'error');
         return;
     }
     
-    // Update in localStorage
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const itemIndex = allItems.findIndex(item => item.id === editingItemId);
+    // Get form values
+    const title = document.getElementById('editTitle')?.value.trim();
+    const description = document.getElementById('editDescription')?.value.trim();
+    const category = document.getElementById('editCategory')?.value;
+    const condition = document.getElementById('editCondition')?.value;
+    const price = parseFloat(document.getElementById('editPrice')?.value);
+    const negotiable = document.getElementById('editNegotiable')?.checked;
+    const location = document.getElementById('editLocation')?.value;
+    const status = document.getElementById('editStatus')?.value;
     
-    if (itemIndex !== -1) {
-        allItems[itemIndex] = { ...allItems[itemIndex], ...updatedData };
-        localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
-        
-        // Update local arrays
-        const localIndex = currentUserItems.findIndex(item => item.id === editingItemId);
-        if (localIndex !== -1) {
-            currentUserItems[localIndex] = { ...currentUserItems[localIndex], ...updatedData };
+    // Validate
+    if (!title || !description || !category || !condition || isNaN(price) || !location) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    try {
+        let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+        if (!items.length) {
+            console.log('No cached items, fetching from JSONBin...');
+            const allItems = await jsonBinService.getAllItems();
+            items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+            console.log('Fetched JSONBin response:', allItems);
+        }
+        if (!Array.isArray(items)) {
+            console.error('JSONBin items is not an array:', items);
+            showToast('Invalid item data from cloud storage', 'error');
+            return;
+        }
+        console.log('Items from JSONBin:', items);
+        console.log('Searching for item ID:', editingItemId);
+        const itemIndex = items.findIndex(item => String(item.id) === String(editingItemId));
+        console.log('Item index found:', itemIndex);
+        if (itemIndex === -1) {
+            showToast('Item not found in cloud storage', 'error');
+            return;
         }
         
+        // Update item
+        items[itemIndex] = {
+            ...items[itemIndex],
+            title,
+            description,
+            category,
+            condition,
+            price,
+            negotiable,
+            location,
+            status,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        // Save updated items to JSONBin
+        if (items.length === 0) {
+            console.warn('Attempted to save empty items array to JSONBin');
+            showToast('Cannot save empty item list', 'error');
+            return;
+        }
+        await jsonBinService.saveAllItems(items);
+        cachedAllItems = items; // Update cache
+        cachedUserItems = items.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+        currentUserItems = [...cachedUserItems]; // Update global
+        filteredItems = [...currentUserItems]; // Update filtered items
+        
         closeEditModal();
-        filterItems(); // Refresh display
+        renderItems();
         updateStats();
-        
-        showSuccessMessage('Item updated successfully!');
-        
-        // Add notification for profile system
-        addNotification('Item updated', `Your item "${updatedData.title}" has been updated`, 'post');
+        showToast('Item updated successfully!', 'success');
+        addNotification('Item updated', `Your item "${title}" has been updated`, 'post');
+    } catch (error) {
+        console.error('Error updating item:', error);
+        showToast('Failed to update item', 'error');
     }
 }
 
 function closeEditModal() {
-    document.getElementById('editItemModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    editingItemId = null;
+    const modal = document.getElementById('editItemModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        editingItemId = null;
+    }
 }
 
-function toggleStatus(itemId) {
-    const item = currentUserItems.find(item => item.id === itemId);
-    if (!item) return;
-    
-    const newStatus = item.status === 'available' ? 'sold' : 'available';
-    updateItemStatus(itemId, newStatus);
-}
-
-function updateItemStatus(itemId, newStatus) {
-    // Update in localStorage
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const itemIndex = allItems.findIndex(item => item.id === itemId);
-    
-    if (itemIndex !== -1) {
-        allItems[itemIndex].status = newStatus;
-        allItems[itemIndex].lastUpdated = new Date().toISOString().split('T')[0];
-        localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
-        
-        // Update local array
-        const localIndex = currentUserItems.findIndex(item => item.id === itemId);
-        if (localIndex !== -1) {
-            currentUserItems[localIndex].status = newStatus;
-            currentUserItems[localIndex].lastUpdated = new Date().toISOString().split('T')[0];
+async function toggleStatus(itemId) {
+    try {
+        let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+        if (!items.length) {
+            console.log('No cached items, fetching from JSONBin...');
+            const allItems = await jsonBinService.getAllItems();
+            items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+            console.log('Fetched JSONBin response:', allItems);
         }
+        if (!Array.isArray(items)) {
+            console.error('JSONBin items is not an array:', items);
+            showToast('Invalid item data from cloud storage', 'error');
+            return;
+        }
+        console.log('Items from JSONBin:', items);
+        console.log('Searching for item ID:', itemId);
+        const itemIndex = items.findIndex(item => String(item.id) === String(itemId));
+        console.log('Item index found:', itemIndex);
+        if (itemIndex === -1) {
+            showToast('Item not found in cloud storage', 'error');
+            return;
+        }
+        
+        // Toggle status
+        items[itemIndex].status = items[itemIndex].status === 'sold' ? 'available' : 'sold';
+        items[itemIndex].lastUpdated = new Date().toISOString();
+        
+        // Save updated items to JSONBin
+        if (items.length === 0) {
+            console.warn('Attempted to save empty items array to JSONBin');
+            showToast('Cannot save empty item list', 'error');
+            return;
+        }
+        await jsonBinService.saveAllItems(items);
+        cachedAllItems = items; // Update cache
+        cachedUserItems = items.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+        currentUserItems = [...cachedUserItems]; // Update global
+        filteredItems = [...currentUserItems]; // Update filtered items
+        
+        renderItems();
+        updateStats();
+        showToast(`Item marked as ${items[itemIndex].status}!`, 'success');
+        addNotification('Item status changed', `Your item "${items[itemIndex].title}" is now ${items[itemIndex].status}`, 'post');
+    } catch (error) {
+        console.error('Error toggling item status:', error);
+        showToast('Failed to update item status', 'error');
+    }
+}
+
+async function updateItemStatus(itemId, newStatus) {
+    try {
+        let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+        if (!items.length) {
+            console.log('No cached items, fetching from JSONBin...');
+            const allItems = await jsonBinService.getAllItems();
+            items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+            console.log('Fetched JSONBin response:', allItems);
+        }
+        if (!Array.isArray(items)) {
+            console.error('JSONBin items is not an array:', items);
+            showToast('Invalid item data from cloud storage', 'error');
+            return;
+        }
+        console.log('Items from JSONBin:', items);
+        console.log('Searching for item ID:', itemId);
+        const itemIndex = items.findIndex(item => String(item.id) === String(itemId));
+        console.log('Item index found:', itemIndex);
+        if (itemIndex === -1) {
+            showToast('Item not found in cloud storage', 'error');
+            return;
+        }
+        
+        // Update status
+        items[itemIndex].status = newStatus;
+        items[itemIndex].lastUpdated = new Date().toISOString();
+        
+        // Save updated items to JSONBin
+        if (items.length === 0) {
+            console.warn('Attempted to save empty items array to JSONBin');
+            showToast('Cannot save empty item list', 'error');
+            return;
+        }
+        await jsonBinService.saveAllItems(items);
+        cachedAllItems = items; // Update cache
+        cachedUserItems = items.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+        currentUserItems = [...cachedUserItems]; // Update global
+        filteredItems = [...currentUserItems]; // Update filtered items
         
         renderItems();
         updateStats();
         
         const statusText = newStatus === 'available' ? 'Available' : 
                           newStatus === 'sold' ? 'Sold' : 'Hidden';
-        showSuccessMessage(`Item marked as ${statusText}`);
-        
-        // Add notification for profile system
-        const item = allItems[itemIndex];
-        addNotification('Item status changed', `Your item "${item.title}" is now ${statusText}`, 'post');
+        showToast(`Item marked as ${statusText}`, 'success');
+        addNotification('Item status changed', `Your item "${items[itemIndex].title}" is now ${statusText}`, 'post');
+    } catch (error) {
+        console.error('Error updating item status:', error);
+        showToast('Failed to update item status', 'error');
     }
 }
 
-function duplicateItem(itemId) {
-    const item = currentUserItems.find(item => item.id === itemId);
-    if (!item) return;
+async function duplicateItem(itemId) {
+    console.log('Duplicating item:', itemId);
+    const item = currentUserItems.find(item => String(item.id) === String(itemId));
+    if (!item) {
+        showToast('Item not found locally', 'error');
+        return;
+    }
     
     const newItem = {
         ...item,
-        id: Date.now(),
-        title: item.title + ' (Copy)',
-        postedDate: new Date().toISOString().split('T')[0],
+        id: Date.now().toString(),
+        title: item.title.includes('(Copy)') ? `${item.title} (Copy)` : `${item.title} (Copy)`,
+        postedDate: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
         status: 'available',
         views: 0,
         inquiries: 0
     };
     
-    // Add to localStorage
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    allItems.unshift(newItem);
-    localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
-    
-    // Reload items
-    loadUserItems();
-    showSuccessMessage('Item duplicated successfully!');
-    
-    // Add notification for profile system
-    addNotification('Item duplicated', `Your item "${item.title}" has been duplicated`, 'post');
+    try {
+        let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+        if (!items.length) {
+            console.log('No cached items, fetching from JSONBin...');
+            const allItems = await jsonBinService.getAllItems();
+            items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+            console.log('Fetched JSONBin response:', allItems);
+        }
+        if (!Array.isArray(items)) {
+            console.error('JSONBin items is not an array:', items);
+            showToast('Invalid item data from cloud storage', 'error');
+            return;
+        }
+        console.log('Current items before duplicate:', items);
+        items.push(newItem);
+        console.log('Items after adding duplicate:', items);
+        
+        await jsonBinService.saveAllItems(items);
+        cachedAllItems = [...items]; // Update cache with fresh copy
+        cachedUserItems = items.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+        currentUserItems = [...cachedUserItems]; // Update global with fresh copy
+        filteredItems = [...currentUserItems]; // Update filtered items
+        
+        renderItems();
+        updateStats();
+        showToast('Item duplicated successfully!', 'success');
+        addNotification('Item duplicated', `Your item "${newItem.title}" has been created`, 'post');
+    } catch (error) {
+        console.error('Error duplicating item:', error);
+        showToast('Failed to duplicate item', 'error');
+    }
 }
 
-function deleteItem(itemId) {
-    const item = currentUserItems.find(item => item.id === itemId);
-    if (!item) return;
+async function deleteItem(itemId) {
+    console.log('Attempting to delete item:', itemId);
+    const item = currentUserItems.find(item => String(item.id) === String(itemId));
+    if (!item) {
+        console.error('Item not found locally:', itemId);
+        showToast('Item not found locally', 'error');
+        return;
+    }
     
-    showConfirmModal(
-        '🗑️',
-        'Delete Item',
-        `Are you sure you want to delete "${item.title}"? This action cannot be undone.`,
-        () => {
-            // Remove from localStorage
-            const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-            const filteredItems = allItems.filter(item => item.id !== itemId);
-            localStorage.setItem('marketplaceItems', JSON.stringify(filteredItems));
+    showConfirmModal('🗑️', 'Confirm Delete', `Are you sure you want to delete "${item.title}"?`, async () => {
+        try {
+            let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+            if (!items.length) {
+                console.log('No cached items, fetching from JSONBin...');
+                const allItems = await jsonBinService.getAllItems();
+                items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+                console.log('Fetched JSONBin response:', allItems);
+            }
+            if (!Array.isArray(items)) {
+                console.error('JSONBin items is not an array:', items);
+                showToast('Invalid item data from cloud storage', 'error');
+                return;
+            }
+            console.log('Items from JSONBin:', items);
+            console.log('Searching for item ID:', itemId);
+            const itemIndex = items.findIndex(item => String(item.id) === String(itemId));
+            console.log('Item index found:', itemIndex);
+            if (itemIndex === -1) {
+                console.error('Item not found in cloud storage:', itemId);
+                showToast('Item not found in cloud storage', 'error');
+                return;
+            }
             
-            // Reload items
-            loadUserItems();
+            const updatedItems = items.filter(item => String(item.id) !== String(itemId));
+            console.log('Items after deletion:', updatedItems);
+            
+            // Save updated items to JSONBin
+            await jsonBinService.saveAllItems(updatedItems);
+            cachedAllItems = [...updatedItems]; // Update cache with fresh copy
+            cachedUserItems = updatedItems.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+            currentUserItems = [...cachedUserItems]; // Update global with fresh copy
+            filteredItems = [...currentUserItems]; // Update filtered items
+            
             closeConfirmModal();
-            showSuccessMessage('Item deleted successfully');
-            
-            // Add notification for profile system
-            addNotification('Item deleted', `Your item "${item.title}" has been removed`, 'post');
+            renderItems();
+            updateStats();
+            showToast(`Item "${item.title}" deleted successfully!`, 'success');
+            addNotification('Item deleted', `Your item "${item.title}" has been deleted`, 'post');
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            showToast('Failed to delete item', 'error');
         }
-    );
+    });
 }
 
 function viewItem(itemId) {
-    // Open item in homepage modal
-    window.open(`index.html#item-${itemId}`, '_blank');
+  window.location.href = `index.html#featured-items`;
 }
 
-function boostItem(itemId) {
-    const item = currentUserItems.find(item => item.id === itemId);
-    if (!item) return;
-    
-    // Mock boost functionality
-    item.views = (item.views || 0) + Math.floor(Math.random() * 20) + 10;
-    item.lastUpdated = new Date().toISOString().split('T')[0];
-    
-    // Update in storage
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const itemIndex = allItems.findIndex(item => item.id === itemId);
-    if (itemIndex !== -1) {
-        allItems[itemIndex] = item;
-        localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
+
+
+
+async function boostItem(itemId) {
+    try {
+        let items = cachedAllItems && cachedAllItems.length > 0 ? cachedAllItems : [];
+        if (!items.length) {
+            console.log('No cached items, fetching from JSONBin...');
+            const allItems = await jsonBinService.getAllItems();
+            items = Array.isArray(allItems?.record?.items) ? allItems.record.items : [];
+            console.log('Fetched JSONBin response:', allItems);
+        }
+        if (!Array.isArray(items)) {
+            console.error('JSONBin items is not an array:', items);
+            showToast('Invalid item data from cloud storage', 'error');
+            return;
+        }
+        console.log('Items from JSONBin:', items);
+        console.log('Searching for item ID:', itemId);
+        const itemIndex = items.findIndex(item => String(item.id) === String(itemId));
+        console.log('Item index found:', itemIndex);
+        if (itemIndex === -1) {
+            showToast('Item not found in cloud storage', 'error');
+            return;
+        }
+        
+        // Boost views
+        items[itemIndex].views = (items[itemIndex].views || 0) + Math.floor(Math.random() * 20) + 10;
+        items[itemIndex].lastUpdated = new Date().toISOString();
+        
+        // Save updated items to JSONBin
+        if (items.length === 0) {
+            console.warn('Attempted to save empty items array to JSONBin');
+            showToast('Cannot save empty item list', 'error');
+            return;
+        }
+        await jsonBinService.saveAllItems(items);
+        cachedAllItems = [...items]; // Update cache with fresh copy
+        cachedUserItems = items.filter(item => String(item.sellerId) === String(getCurrentUser().id));
+        currentUserItems = [...cachedUserItems]; // Update global
+        filteredItems = [...currentUserItems]; // Update filtered items
+        
+        renderItems();
+        updateStats();
+        showToast('Item boosted! More people will see it now.', 'success');
+        addNotification('Item boosted', `Your item "${items[itemIndex].title}" has been boosted`, 'post');
+    } catch (error) {
+        console.error('Error boosting item:', error);
+        showToast('Failed to boost item', 'error');
     }
-    
-    renderItems();
-    updateStats();
-    showSuccessMessage('Item boosted! More people will see it now.');
-    
-    // Add notification for profile system
-    addNotification('Item boosted', `Your item "${item.title}" has been boosted`, 'post');
 }
 
-// Navigation functions
 function goToPostItem() {
     window.location.href = 'post-item.html';
 }
 
 function showUserMenu() {
-    // Implement user menu similar to homepage
     const currentUser = getCurrentUser();
-    if (currentUser) {
-        const existingMenu = document.querySelector('.user-menu');
-        if (existingMenu) {
-            existingMenu.remove();
-            return;
-        }
-        
-        const menu = document.createElement('div');
-        menu.className = 'user-menu';
-        menu.innerHTML = `
-            <div class="user-menu-item" onclick="goToPostItem()">📦 Post Item</div>
-            <div class="user-menu-item" onclick="window.location.href='index.html'">🏠 Homepage</div>
-            <div class="user-menu-item" onclick="goToProfile()">👤 Profile</div>
-            <div class="user-menu-divider"></div>
-            <div class="user-menu-item logout" onclick="logout()">🚪 Logout</div>
+    if (!currentUser) return;
+    
+    const existingMenu = document.querySelector('.user-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+        return;
+    }
+    
+    const menu = document.createElement('div');
+    menu.className = 'user-menu';
+    menu.innerHTML = `
+        <div class="user-menu-item" onclick="goToPostItem()">📦 Post Item</div>
+        <div class="user-menu-item" onclick="window.location.href='index.html'">🏠 Homepage</div>
+        <div class="user-menu-item" onclick="goToProfile()">👤 Profile</div>
+        <div class="user-menu-divider"></div>
+        <div class="user-menu-item logout" onclick="logout()">🚪 Logout</div>
+    `;
+    
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    if (userMenuBtn) {
+        const rect = userMenuBtn.getBoundingClientRect();
+        menu.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 10}px;
+            right: 1rem;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 150px;
         `;
-        
-        // Position menu
-        const rect = document.getElementById('userMenuBtn').getBoundingClientRect();
-        menu.style.position = 'fixed';
-        menu.style.top = (rect.bottom + 10) + 'px';
-        menu.style.right = '1rem';
-        menu.style.zIndex = '1000';
-        
         document.body.appendChild(menu);
         
         setTimeout(() => {
             document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target) && !document.getElementById('userMenuBtn').contains(e.target)) {
+                if (!menu.contains(e.target) && !userMenuBtn.contains(e.target)) {
                     menu.remove();
                     document.removeEventListener('click', closeMenu);
                 }
@@ -783,8 +1106,9 @@ function showUserMenu() {
 }
 
 function changeViewMode() {
-    const viewMode = document.getElementById('viewMode').value;
+    const viewMode = document.getElementById('viewMode')?.value;
     const grid = document.getElementById('myItemsGrid');
+    if (!grid || !viewMode) return;
     
     if (viewMode === 'list') {
         grid.classList.add('list-view');
@@ -795,64 +1119,46 @@ function changeViewMode() {
     }
 }
 
-// Helper functions
 function showBulkActions() {
-    // Get selected items
     const checkboxes = document.querySelectorAll('.item-checkbox:checked');
-    const selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
     
     if (selectedIds.length === 0) {
-        alert('Please select items first');
+        showToast('Please select items first', 'error');
         return;
     }
     
-    // Show bulk actions menu
-    alert(`Bulk actions for ${selectedIds.length} items - Coming soon!`);
+    showToast(`Bulk actions for ${selectedIds.length} items - Coming soon!`, 'info');
 }
 
 function showConfirmModal(icon, title, message, onConfirm) {
     const modal = document.getElementById('confirmModal');
-    document.getElementById('confirmIcon').textContent = icon;
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
+    if (!modal) {
+        console.error('Confirm modal not found');
+        showToast('Cannot perform action: modal not found', 'error');
+        return;
+    }
     
-    document.getElementById('confirmBtn').onclick = onConfirm;
+    const confirmIcon = document.getElementById('confirmIcon');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    
+    if (confirmIcon) confirmIcon.textContent = icon;
+    if (confirmTitle) confirmTitle.textContent = title;
+    if (confirmMessage) confirmMessage.textContent = message;
+    if (confirmBtn) confirmBtn.onclick = onConfirm;
     
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
 
 function closeConfirmModal() {
-    document.getElementById('confirmModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-function showSuccessMessage(message) {
-    // Create temporary success notification
-    const notification = document.createElement('div');
-    notification.className = 'success-notification';
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 2rem;
-        background: #10b981;
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
-        z-index: 1001;
-        font-size: 0.875rem;
-        font-weight: 600;
-        animation: slideInRight 0.4s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.4s ease';
-        setTimeout(() => notification.remove(), 400);
-    }, 3000);
+    const modal = document.getElementById('confirmModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function debounce(func, wait) {
@@ -872,14 +1178,13 @@ function goToProfile() {
 }
 
 function logout() {
-    if (confirm('Are you sure you want to logout?')) {
+    showConfirmModal('🚪', 'Confirm Logout', 'Are you sure you want to logout?', () => {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('rememberLogin');
         window.location.href = 'index.html';
-    }
+    });
 }
 
-// Notification function for profile integration
 function addNotification(title, message, type = 'general') {
     const currentUser = getCurrentUser();
     if (!currentUser) return;
@@ -896,16 +1201,10 @@ function addNotification(title, message, type = 'general') {
     };
     
     notifications.unshift(notification);
-    
-    // Keep only last 50 notifications
-    if (notifications.length > 50) {
-        notifications.splice(50);
-    }
-    
+    if (notifications.length > 50) notifications.splice(50);
     localStorage.setItem('userNotifications', JSON.stringify(notifications));
 }
 
-// Utility functions
 function isLoggedIn() {
     return localStorage.getItem('currentUser') !== null;
 }

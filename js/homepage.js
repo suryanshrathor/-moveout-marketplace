@@ -984,20 +984,18 @@ function applySorting() {
 
 // UPDATED: showItemDetails function with WhatsApp integration
 function showItemDetails(item) {
-    // Create image gallery HTML
+    console.log('Showing details for item:', item.id, item.title);
     let imageGalleryHTML = '';
     
-    if (item.images && item.images.length > 0) {
-        // Store images for navigation
+    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
         currentModalImages = item.images;
         currentImageIndex = 0;
         
-        // Multiple images - create carousel
         if (item.images.length > 1) {
             imageGalleryHTML = `
                 <div class="image-gallery">
                     <div class="main-image-container">
-                        <img id="mainModalImage" src="${item.images[0].data}" alt="${item.title}" style="width: 100%; height: 300px; object-fit: contain; border-radius: 0.5rem;">
+                        <img id="mainModalImage" src="${item.images[0].data}" alt="${item.title}" style="width: 100%; height: 300px; object-fit: contain; border-radius: 0.5rem;" onerror="this.src='https://via.placeholder.com/150?text=${item.category}'">
                         <div class="image-nav">
                             <button class="nav-btn prev-btn" onclick="prevModalImage()">❮</button>
                             <button class="nav-btn next-btn" onclick="nextModalImage()">❯</button>
@@ -1017,18 +1015,16 @@ function showItemDetails(item) {
                 </div>
             `;
         } else {
-            // Single image
             currentModalImages = item.images;
-            imageGalleryHTML = `<img src="${item.images[0].data}" alt="${item.title}" style="width: 100%; height: 300px; object-fit: contain; border-radius: 0.5rem;">`;
+            imageGalleryHTML = `<img src="${item.images[0].data}" alt="${item.title}" style="width: 100%; height: 300px; object-fit: contain; border-radius: 0.5rem;" onerror="this.src='https://via.placeholder.com/150?text=${item.category}'">`;
         }
     } else {
-        // Emoji fallback
         currentModalImages = [];
-        imageGalleryHTML = `<div class="item-image-large">${item.image}</div>`;
+        imageGalleryHTML = `<div class="item-image-large">${item.image || '📷'}</div>`;
     }
 
     const currentUser = getCurrentUser();
-    const isOwnItem = currentUser && item.sellerId === currentUser.id;
+    const isOwnItem = currentUser && String(item.sellerId) === String(currentUser.id);
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -1061,13 +1057,13 @@ function showItemDetails(item) {
             </div>
             <div class="modal-footer">
                 ${!isOwnItem ? 
-                    `<button class="whatsapp-btn whatsapp-btn-large" onclick="contactSellerWhatsApp(${item.id})">
+                    `<button class="whatsapp-btn whatsapp-btn-large" onclick="contactSellerWhatsApp('${item.id}')">
                         💬 WhatsApp Seller
                     </button>
-                    <button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp(${item.id})" style="padding: 12px 24px;">
+                    <button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp('${item.id}')">
                         📤 Share Item
                     </button>` :
-                    `<button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp(${item.id})" style="padding: 12px 24px;">
+                    `<button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp('${item.id}')">
                         📤 Share Your Item
                     </button>`
                 }
@@ -1130,9 +1126,15 @@ function prevModalImage() {
 
 // View item function
 function viewItem(itemId) {
-    const item = currentItems.find(item => item.id === itemId);
+    console.log('viewItem called with itemId:', itemId);
+    console.log('Current items:', currentItems.map(item => ({ id: item.id, title: item.title })));
+    const item = currentItems.find(item => String(item.id) === String(itemId));
     if (item) {
+        console.log('Item found:', item);
         showItemDetails(item);
+    } else {
+        console.error('Item not found for ID:', itemId);
+        showSuccessToast('Item not found');
     }
 }
 

@@ -200,6 +200,17 @@
             </div>
         </div>
     </footer>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+        if (window.location.hash === '#featured-items') {
+            const section = document.querySelector('.featured-items');
+            if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        });
+    </script>
+
 
     <script src="js/jsonbin-service.js"></script>
     <script src="js/homepage.js"></script>

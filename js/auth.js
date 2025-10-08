@@ -1,46 +1,35 @@
-// Updated auth.js - Remove Google login functionality
-
-// Authentication functionality
 document.addEventListener('DOMContentLoaded', function() {
     setupAuthForms();
-    hideGoogleLogin(); // Hide Google login buttons
+    hideGoogleLogin();
 });
 
 function hideGoogleLogin() {
-    // Hide Google login buttons since they're not implemented
     const googleButtons = document.querySelectorAll('.social-btn');
     googleButtons.forEach(btn => {
         if (btn.textContent.includes('Google')) {
             btn.style.display = 'none';
         }
     });
-    
-    // Also hide the "or" divider
     const dividers = document.querySelectorAll('.auth-divider');
-    dividers.forEach(divider => {
-        divider.style.display = 'none';
-    });
+    dividers.forEach(divider => divider.style.display = 'none');
 }
 
 function setupAuthForms() {
-    // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         setupLoginForm(loginForm);
     }
     
-    // Register form
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         setupRegisterForm(registerForm);
     }
     
-    // Password toggles
     setupPasswordToggles();
 }
 
 function setupLoginForm(form) {
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const formData = new FormData(form);
@@ -48,27 +37,21 @@ function setupLoginForm(form) {
         const password = formData.get('password');
         const remember = formData.get('remember');
         
-        // Clear previous errors
         clearErrors();
         
-        // Validate form
         if (!validateLoginForm(email, password)) {
             return;
         }
         
-        // Simulate login process
         showLoading(form);
         
-        setTimeout(() => {
-            // Check credentials (in real app, this would be an API call)
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
+        try {
+            const result = await window.jsonBinService.loginUser(email, password);
             
             hideLoading(form);
             
-            if (user) {
-                // Login successful
-                localStorage.setItem('currentUser', JSON.stringify(user));
+            if (result.success) {
+                localStorage.setItem('currentUser', JSON.stringify(result.user));
                 if (remember) {
                     localStorage.setItem('rememberLogin', 'true');
                 }
@@ -76,27 +59,27 @@ function setupLoginForm(form) {
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
+            } else if (email === 'demo@moveout.com' && password === 'demo123') {
+                const demoUser = {
+                    id: 'demo1',
+                    firstName: 'Demo',
+                    lastName: 'User',
+                    email: 'demo@moveout.com',
+                    phone: '+91-9999999999',
+                    location: 'Bangalore'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(demoUser));
+                showSuccess('Demo login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
             } else {
-                // Try with demo account
-                if (email === 'demo@moveout.com' && password === 'demo123') {
-                    const demoUser = {
-                        id: 1,
-                        firstName: 'Demo',
-                        lastName: 'User',
-                        email: 'demo@moveout.com',
-                        phone: '+91-9999999999',
-                        location: 'Bangalore'
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(demoUser));
-                    showSuccess('Demo login successful! Redirecting...');
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                } else {
-                    showError('emailError', 'Invalid email or password. Try demo@moveout.com / demo123');
-                }
+                showError('emailError', result.error || 'Invalid email or password. Try demo@moveout.com / demo123');
             }
-        }, 1000);
+        } catch (error) {
+            hideLoading(form);
+            showError('emailError', error.message || 'Login failed');
+        }
     });
 }
 
@@ -104,21 +87,19 @@ function setupRegisterForm(form) {
     const passwordInput = document.getElementById('registerPassword');
     const confirmPasswordInput = document.getElementById('confirmPassword');
     
-    // Password strength indicator
     if (passwordInput) {
         passwordInput.addEventListener('input', function() {
             updatePasswordStrength(this.value);
         });
     }
     
-    // Confirm password validation
     if (confirmPasswordInput) {
         confirmPasswordInput.addEventListener('input', function() {
             validatePasswordMatch();
         });
     }
     
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const formData = new FormData(form);
@@ -134,48 +115,37 @@ function setupRegisterForm(form) {
             newsletter: formData.get('newsletter')
         };
         
-        // Clear previous errors
         clearErrors();
         
-        // Validate form
         if (!validateRegisterForm(userData)) {
             return;
         }
         
-        // Simulate registration process
         showLoading(form);
         
-        setTimeout(() => {
-            // Check if user already exists
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const existingUser = users.find(u => u.email === userData.email);
-            
-            hideLoading(form);
-            
-            if (existingUser) {
-                showError('regEmailError', 'An account with this email already exists');
-                return;
-            }
-            
-            // Create new user
-            const newUser = {
-                id: Date.now(),
+        try {
+            const result = await window.jsonBinService.registerUser({
                 firstName: userData.firstName,
                 lastName: userData.lastName,
                 email: userData.email,
                 phone: userData.phone,
                 location: userData.location,
-                password: userData.password, // In real app, this would be hashed
-                newsletter: userData.newsletter,
-                createdAt: new Date().toISOString()
-            };
+                password: userData.password,
+                newsletter: userData.newsletter
+            });
             
-            users.push(newUser);
-            localStorage.setItem('users', JSON.stringify(users));
+            hideLoading(form);
             
-            // Show success message
-            showRegistrationSuccess();
-        }, 1500);
+            if (result.success) {
+                localStorage.setItem('currentUser', JSON.stringify(result.user));
+                showRegistrationSuccess();
+            } else {
+                showError('regEmailError', result.error || 'Registration failed');
+            }
+        } catch (error) {
+            hideLoading(form);
+            showError('regEmailError', error.message || 'Registration failed');
+        }
     });
 }
 
@@ -198,7 +168,6 @@ function setupPasswordToggles() {
     });
 }
 
-// Validation functions
 function validateLoginForm(email, password) {
     let isValid = true;
     
@@ -221,19 +190,16 @@ function validateLoginForm(email, password) {
 function validateRegisterForm(userData) {
     let isValid = true;
     
-    // First name validation
     if (!userData.firstName.trim()) {
         showError('firstNameError', 'First name is required');
         isValid = false;
     }
     
-    // Last name validation
     if (!userData.lastName.trim()) {
         showError('lastNameError', 'Last name is required');
         isValid = false;
     }
     
-    // Email validation
     if (!userData.email) {
         showError('regEmailError', 'Email is required');
         isValid = false;
@@ -242,7 +208,6 @@ function validateRegisterForm(userData) {
         isValid = false;
     }
     
-    // Phone validation
     if (!userData.phone) {
         showError('phoneError', 'Phone number is required');
         isValid = false;
@@ -251,13 +216,11 @@ function validateRegisterForm(userData) {
         isValid = false;
     }
     
-    // Location validation
     if (!userData.location) {
         showError('locationError', 'Please select your city');
         isValid = false;
     }
     
-    // Password validation
     if (!userData.password) {
         showError('regPasswordError', 'Password is required');
         isValid = false;
@@ -266,13 +229,11 @@ function validateRegisterForm(userData) {
         isValid = false;
     }
     
-    // Confirm password validation
     if (userData.password !== userData.confirmPassword) {
         showError('confirmPasswordError', 'Passwords do not match');
         isValid = false;
     }
     
-    // Terms validation
     if (!userData.terms) {
         showError('termsError', 'You must accept the terms and conditions');
         isValid = false;
@@ -300,11 +261,8 @@ function updatePasswordStrength(password) {
     
     const strength = calculatePasswordStrength(password);
     
-    // Update strength bar
     strengthBar.style.width = `${strength.percentage}%`;
     strengthBar.style.background = strength.color;
-    
-    // Update strength text
     strengthText.textContent = strength.text;
     strengthText.style.color = strength.color;
 }
@@ -329,25 +287,21 @@ function calculatePasswordStrength(password) {
     }
 }
 
-// Helper functions
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
 function isValidPhone(phone) {
-    // Indian phone number validation
     const phoneRegex = /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/;
     return phoneRegex.test(phone.replace(/\s/g, ''));
 }
 
 function isStrongPassword(password) {
-    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
     const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])/;
     return password.length >= 8 && strongRegex.test(password);
 }
 
-// UI helper functions
 function showError(elementId, message) {
     const errorElement = document.getElementById(elementId);
     if (errorElement) {
@@ -389,7 +343,6 @@ function hideLoading(form) {
 }
 
 function showSuccess(message) {
-    // Create success notification
     const notification = document.createElement('div');
     notification.className = 'success-notification';
     notification.textContent = message;
@@ -423,7 +376,6 @@ function showRegistrationSuccess() {
     }
 }
 
-// Add animation styles
 const animationStyles = document.createElement('style');
 animationStyles.textContent = `
     @keyframes slideIn {

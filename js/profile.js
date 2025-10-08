@@ -1,5 +1,3 @@
-// Complete Profile Page JavaScript - js/profile.js
-
 // Global variables
 let currentUserProfile = {};
 let notificationsData = [];
@@ -159,7 +157,36 @@ function loadUserProfile() {
     updateProfileDisplay();
 }
 
-function updateProfileDisplay() {
+async function loadUserItems() {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        console.error('No current user found');
+        return [];
+    }
+    
+    let allItems = [];
+    try {
+        const response = await jsonBinService.getAllItems();
+        // console.log('Raw JSONBin response:', JSON.stringify(response, null, 2));
+        allItems = Array.isArray(response) ? response : response?.record?.items || [];
+        if (!Array.isArray(allItems)) {
+            console.error('JSONBin response is not an array:', allItems);
+            allItems = [];
+        }
+        // Sync localStorage
+        localStorage.setItem('marketplaceItems', JSON.stringify(allItems));
+    } catch (error) {
+        console.error('Error fetching items from JSONBin:', error);
+        showToast('Failed to load items from cloud storage', 'error');
+        allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
+    }
+    
+    const userItems = allItems.filter(item => String(item.sellerId) === String(currentUser.id));
+    console.log(`Found ${userItems.length} user items`);
+    return userItems;
+}
+
+async function updateProfileDisplay() {
     const profile = currentUserProfile;
     
     // Update profile info
@@ -170,13 +197,13 @@ function updateProfileDisplay() {
     if (userName) userName.textContent = `${profile.firstName} ${profile.lastName}`;
     
     const userEmail = document.getElementById('userEmail');
-    if (userEmail) userEmail.textContent = profile.email;
+    if (userEmail) userEmail.textContent = `${profile.email}`;
     
     const userPhone = document.getElementById('userPhone');
-    if (userPhone) userPhone.textContent = profile.phone;
+    if (userPhone) userPhone.textContent = `${profile.phone}`;
     
     const userLocation = document.getElementById('userLocation');
-    if (userLocation) userLocation.textContent = profile.location || 'Not set';
+    if (userLocation) userLocation.textContent = `${profile.location}` || 'Not set';
     
     const memberSince = document.getElementById('memberSince');
     if (memberSince) memberSince.textContent = `Member since: ${formatDate(profile.memberSince)}`;
@@ -192,8 +219,7 @@ function updateProfileDisplay() {
     if (pushNotificationsToggle) pushNotificationsToggle.checked = profile.pushNotifications;
     
     // Load user items count
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const userItems = allItems.filter(item => item.sellerId === profile.id);
+    const userItems = await loadUserItems();
     const soldItems = userItems.filter(item => item.status === 'sold');
     
     const totalItemsPosted = document.getElementById('totalItemsPosted');
@@ -203,23 +229,38 @@ function updateProfileDisplay() {
     if (totalItemsSold) totalItemsSold.textContent = soldItems.length;
 }
 
-function saveUserProfile() {
+async function saveUserProfile() {
     localStorage.setItem('userProfile', JSON.stringify(currentUserProfile));
     
-    // Also update currentUser
     const currentUser = getCurrentUser();
     const updatedUser = { ...currentUser, ...currentUserProfile };
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    
+    if (window.jsonBinService && typeof window.jsonBinService.updateUser === 'function') {
+        try {
+            await jsonBinService.updateUser(String(currentUser.id), updatedUser);
+            console.log('User profile synced with JSONBin');
+        } catch (error) {
+            console.error('Failed to sync user profile with JSONBin:', error);
+            showToast('Profile updated locally but failed to sync with cloud', 'error');
+        }
+    } else {
+        console.warn('jsonBinService.updateUser is not available, saving locally only');
+        showToast('Profile updated locally (cloud sync unavailable)', 'warning');
+    }
 }
 
 // Edit Profile Modal
 function openEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
-    if (!modal) return;
+    if (!modal) {
+        console.error('Edit profile modal not found');
+        showToast('Cannot open profile editor', 'error');
+        return;
+    }
     
     const profile = currentUserProfile;
     
-    // Populate form
     const editFirstName = document.getElementById('editFirstName');
     if (editFirstName) editFirstName.value = profile.firstName || '';
     
@@ -235,7 +276,6 @@ function openEditProfileModal() {
     const editBio = document.getElementById('editBio');
     if (editBio) editBio.value = profile.bio || '';
     
-    // Setup character counter
     setupBioCharCounter();
     
     modal.style.display = 'flex';
@@ -302,12 +342,15 @@ function setupBioCharCounter() {
 // Avatar Management
 function openAvatarModal() {
     const modal = document.getElementById('avatarModal');
-    if (!modal) return;
+    if (!modal) {
+        console.error('Avatar modal not found');
+        showToast('Cannot open avatar selector', 'error');
+        return;
+    }
     
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    // Highlight current avatar
     selectedAvatar = currentUserProfile.avatar;
     document.querySelectorAll('.avatar-option').forEach(option => {
         option.classList.remove('selected');
@@ -390,12 +433,15 @@ function saveSettings() {
 // Password Management
 function openPasswordModal() {
     const modal = document.getElementById('changePasswordModal');
-    if (!modal) return;
+    if (!modal) {
+        console.error('Change password modal not found');
+        showToast('Cannot open password editor', 'error');
+        return;
+    }
     
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
-    // Clear form
     const changePasswordForm = document.getElementById('changePasswordForm');
     if (changePasswordForm) changePasswordForm.reset();
 }
@@ -408,12 +454,11 @@ function closePasswordModal() {
     }
 }
 
-function changePassword() {
+async function changePassword() {
     const currentPassword = document.getElementById('currentPassword')?.value;
     const newPassword = document.getElementById('newPassword')?.value;
     const confirmPassword = document.getElementById('confirmPassword')?.value;
     
-    // Basic validation
     if (!currentPassword || !newPassword || !confirmPassword) {
         showToast('Please fill in all password fields', 'error');
         return;
@@ -429,27 +474,34 @@ function changePassword() {
         return;
     }
     
-    // Simulate password change (in real app, this would be an API call)
-    setTimeout(() => {
-        closePasswordModal();
-        showToast('Password changed successfully!', 'success');
-        addNotification('Security update', 'Your password was changed', 'security');
-    }, 1000);
+    const currentUser = getCurrentUser();
+    try {
+        const updatedUser = { ...currentUser, password: CryptoJS.SHA256(newPassword).toString() };
+        if (window.jsonBinService && typeof window.jsonBinService.updateUser === 'function') {
+            await jsonBinService.updateUser(String(currentUser.id), updatedUser);
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            closePasswordModal();
+            showToast('Password changed successfully!', 'success');
+            addNotification('Security update', 'Your password was changed', 'security');
+        } else {
+            console.warn('jsonBinService.updateUser is not available, saving locally only');
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            closePasswordModal();
+            showToast('Password changed locally (cloud sync unavailable)', 'warning');
+        }
+    } catch (error) {
+        console.error('Error updating password:', error);
+        showToast('Failed to change password', 'error');
+    }
 }
 
 // Analytics Management
-function loadAnalytics() {
+async function loadAnalytics() {
     const analyticsPeriod = document.getElementById('analyticsPeriod');
     if (!analyticsPeriod) return;
     
     const period = analyticsPeriod.value;
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const currentUser = getCurrentUser();
-    
-    if (!currentUser) return;
-    
-    // Filter user's items
-    const userItems = allItems.filter(item => item.sellerId === currentUser.id);
+    const userItems = await loadUserItems();
     
     // Calculate analytics
     const totalViews = userItems.reduce((sum, item) => sum + (item.views || 0), 0);
@@ -471,17 +523,17 @@ function loadAnalytics() {
     if (averageRatingAnalytics) averageRatingAnalytics.textContent = '4.8'; // Mock rating
     
     // Generate chart data
-    generateViewsChart(period);
+    generateViewsChart(period, userItems);
 }
 
-function generateViewsChart(period) {
+function generateViewsChart(period, userItems) {
     const canvas = document.getElementById('viewsChart');
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     const days = parseInt(period);
     
-    // Generate mock chart data
+    // Generate chart data based on user items
     const labels = [];
     const data = [];
     const today = new Date();
@@ -490,7 +542,11 @@ function generateViewsChart(period) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-        data.push(Math.floor(Math.random() * 50) + 10);
+        // Sum views for items posted before or on this date
+        const dailyViews = userItems
+            .filter(item => new Date(item.postedDate) <= date)
+            .reduce((sum, item) => sum + (item.views || 0), 0);
+        data.push(dailyViews);
     }
     
     // Destroy existing chart if it exists
@@ -539,22 +595,52 @@ function generateViewsChart(period) {
 }
 
 // Recent Activity
-function loadRecentActivity() {
+async function loadRecentActivity() {
     const activityList = document.getElementById('recentActivityList');
     if (!activityList) return;
     
-    // Generate mock recent activity
-    const activities = [
-        { icon: '👁️', text: 'Your item "MacBook Pro" got 5 new views', time: '2 hours ago', type: 'view' },
-        { icon: '💬', text: 'New inquiry for "Study Table"', time: '4 hours ago', type: 'inquiry' },
-        { icon: '💰', text: 'You sold "Samsung Monitor" for ₹8,500', time: '1 day ago', type: 'sale' },
-        { icon: '📦', text: 'You posted a new item "Gaming Chair"', time: '2 days ago', type: 'post' },
-        { icon: '⭐', text: 'You received a 5-star rating', time: '3 days ago', type: 'rating' }
-    ];
+    const userItems = await loadUserItems();
+    const notifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
     
+    // Generate activities from items and notifications
+    const activities = [];
+    
+    // Add activities from items (e.g., posts, sales)
+    userItems.forEach(item => {
+        activities.push({
+            icon: '📦',
+            text: `You posted a new item "${item.title}"`,
+            time: formatTimeAgo(item.postedDate),
+            type: 'post'
+        });
+        if (item.status === 'sold') {
+            activities.push({
+                icon: '💰',
+                text: `You sold "${item.title}" for ₹${item.price.toLocaleString()}`,
+                time: formatTimeAgo(item.lastUpdated || item.postedDate),
+                type: 'sale'
+            });
+        }
+    });
+    
+    // Add activities from notifications
+    notifications.forEach(notification => {
+        if (['view', 'inquiry', 'rating'].includes(notification.type)) {
+            activities.push({
+                icon: getNotificationIcon(notification.type),
+                text: notification.message,
+                time: formatTimeAgo(notification.timestamp),
+                type: notification.type
+            });
+        }
+    });
+    
+    // Sort by timestamp (newest first)
+    activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // Show up to 5 recent activities
     activityList.innerHTML = '';
-    
-    activities.forEach(activity => {
+    activities.slice(0, 5).forEach(activity => {
         const activityItem = document.createElement('div');
         activityItem.className = 'activity-item';
         activityItem.innerHTML = `
@@ -566,6 +652,10 @@ function loadRecentActivity() {
         `;
         activityList.appendChild(activityItem);
     });
+    
+    if (activities.length === 0) {
+        activityList.innerHTML = '<div class="activity-item">No recent activity</div>';
+    }
 }
 
 // Notifications Management
@@ -699,10 +789,9 @@ function clearAllNotifications() {
 }
 
 // Account Actions
-function exportUserData() {
+async function exportUserData() {
     const currentUser = getCurrentUser();
-    const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-    const userItems = allItems.filter(item => item.sellerId === currentUser.id);
+    const userItems = await loadUserItems();
     
     const userData = {
         profile: currentUserProfile,
@@ -727,7 +816,7 @@ function exportUserData() {
     addNotification('Data export', 'Your marketplace data has been exported', 'profile');
 }
 
-function clearLocalData() {
+async function clearLocalData() {
     if (confirm('This will clear all your local data including items, notifications, and settings. Are you sure?')) {
         const currentUser = getCurrentUser();
         
@@ -738,12 +827,17 @@ function clearLocalData() {
         localStorage.removeItem('emailNotifications');
         localStorage.removeItem('pushNotifications');
         
-        // Clear user items
-        const allItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
-        const otherItems = allItems.filter(item => item.sellerId !== currentUser.id);
-        localStorage.setItem('marketplaceItems', JSON.stringify(otherItems));
-        
-        showToast('Local data cleared successfully!', 'success');
+        // Clear user items from JSONBin and localStorage
+        try {
+            const allItems = await jsonBinService.getAllItems();
+            const otherItems = allItems.filter(item => String(item.sellerId) !== String(currentUser.id));
+            await jsonBinService.saveAllItems(otherItems);
+            localStorage.setItem('marketplaceItems', JSON.stringify(otherItems));
+            showToast('Local data cleared successfully!', 'success');
+        } catch (error) {
+            console.error('Error clearing items from JSONBin:', error);
+            showToast('Failed to clear items from cloud storage', 'error');
+        }
         
         // Reload page
         setTimeout(() => {
@@ -752,17 +846,42 @@ function clearLocalData() {
     }
 }
 
-function deleteAccount() {
+async function deleteAccount() {
     if (confirm('This will permanently delete your account and all data. This action cannot be undone. Are you sure?')) {
-        if (confirm('Are you absolutely sure? Type "DELETE" to confirm:')) {
-            // In a real app, this would call an API
-            showToast('Account deletion requested. You will be contacted via email.', 'info');
-            addNotification('Account deletion', 'Account deletion request submitted', 'security');
+        if (prompt('Type "DELETE" to confirm:') === 'DELETE') {
+            const currentUser = getCurrentUser();
+            try {
+                const allItems = await jsonBinService.getAllItems();
+                const otherItems = allItems.filter(item => String(item.sellerId) !== String(currentUser.id));
+                await jsonBinService.saveAllItems(otherItems);
+                
+                if (window.jsonBinService && typeof window.jsonBinService.deleteUser === 'function') {
+                    await jsonBinService.deleteUser(String(currentUser.id));
+                } else {
+                    console.warn('jsonBinService.deleteUser is not available');
+                }
+                
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('userProfile');
+                localStorage.removeItem('userNotifications');
+                localStorage.removeItem('darkMode');
+                localStorage.removeItem('emailNotifications');
+                localStorage.removeItem('pushNotifications');
+                localStorage.removeItem('marketplaceItems');
+                
+                showToast('Account deleted successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                showToast('Failed to delete account', 'error');
+            }
         }
     }
 }
 
-// User Menu (same as other pages)
+// User Menu
 function showUserMenu() {
     const currentUser = getCurrentUser();
     if (currentUser) {
@@ -878,7 +997,6 @@ function logout() {
     }
 }
 
-// Utility functions from other pages
 function isLoggedIn() {
     return localStorage.getItem('currentUser') !== null;
 }
