@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - MoveOut Market</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
     <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -183,7 +184,7 @@
                                 <div class="stat-item">
                                     <div class="stat-icon">💰</div>
                                     <div class="stat-content">
-                                        <div class="stat-number" id="totalEarningsAnalytics">₹0</div>
+                                        <div class="stat-number" id="totalEarningsAnalytics">¥0</div>
                                         <div class="stat-label">Est. Earnings</div>
                                     </div>
                                 </div>
@@ -288,7 +289,7 @@
                     
                     <div class="form-group">
                         <label for="editDefaultLocation">Default Location</label>
-                        <select id="editDefaultLocation" class="form-control">
+                        <!-- <select id="editDefaultLocation" class="form-control">
                             <option value="Bangalore">Bangalore</option>
                             <option value="Mumbai">Mumbai</option>
                             <option value="Delhi">Delhi</option>
@@ -299,7 +300,15 @@
                             <option value="Gurgaon">Gurgaon</option>
                             <option value="Noida">Noida</option>
                             <option value="Ahmedabad">Ahmedabad</option>
-                        </select>
+                        </select> -->
+                        <input 
+                            type="editDefaultLocation" 
+                            id="editDefaultLocation" 
+                            name="editDefaultLocation" 
+                            class="form-control" 
+                            placeholder="Enter your city"
+                            required
+                        >
                     </div>
                     
                     <div class="form-group">

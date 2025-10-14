@@ -1162,7 +1162,7 @@ body {
 
 .item-condition {
   background: var(--secondary-color);
-  color: var(--color-btn-primary-text);
+  /* color: var(--color-btn-primary-text); */
   padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
@@ -9382,7 +9382,7 @@ input:checked + .toggle-slider:before {
 
 .stat-label {
     font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
+    color: rgb(0 0 0);
 }
 
 .chart-container {

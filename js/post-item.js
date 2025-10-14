@@ -136,7 +136,7 @@ function validatePhoneNumber(e) {
     
     if (isValidIndianPhone(phoneValue)) {
         validationEl.className = 'phone-validation valid';
-        validationEl.innerHTML = '✓ Valid Indian mobile number - WhatsApp ready!';
+        validationEl.innerHTML = '✓ Valid mobile number - WhatsApp ready!';
     } else {
         validationEl.className = 'phone-validation invalid';
         validationEl.innerHTML = '✗ Please enter a valid 10-digit Indian mobile number';
@@ -173,13 +173,13 @@ function formatPhoneNumber(e) {
     
     // Auto-format to Indian format
     if (phoneValue.length === 10 && /^[6-9]/.test(phoneValue)) {
-        phoneInput.value = `+91-${phoneValue}`;
+        phoneInput.value = `+81-${phoneValue}`;
     } else if (phoneValue.length === 11 && phoneValue.startsWith('0')) {
         const mobile = phoneValue.substring(1);
-        phoneInput.value = `+91-${mobile}`;
+        phoneInput.value = `+81-${mobile}`;
     } else if (phoneValue.length === 12 && phoneValue.startsWith('91')) {
         const mobile = phoneValue.substring(2);
-        phoneInput.value = `+91-${mobile}`;
+        phoneInput.value = `+81-${mobile}`;
     }
 }
 
@@ -196,19 +196,17 @@ function setupPostItemForm() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         console.log('Form submitted');
-        if (validateForm()) {
+        if (validateForm(true)) { // Enable scroll to error for form submission too
             submitItem();
         }
     });
     
-    // Preview functionality
+    // Enhanced preview functionality
     if (previewBtn) {
         previewBtn.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('Preview clicked');
-            if (validateForm()) {
-                showPreview();
-            }
+            showPreview(); // showPreview now handles validation and scrolling internally
         });
     }
 }
@@ -336,27 +334,103 @@ function populateUserInfo() {
 }
 
 function setupCharacterCounters() {
-    // Title character counter
+    // Title character counter with real-time validation
     const titleInput = document.getElementById('itemTitle');
     if (titleInput) {
         const titleCounter = titleInput.parentElement.querySelector('.char-counter');
         if (titleCounter) {
             titleInput.addEventListener('input', function() {
                 updateCharCounter(this, titleCounter);
+                validateTitleRealtime(this);
+            });
+            
+            titleInput.addEventListener('blur', function() {
+                validateTitleRealtime(this);
             });
         }
     }
     
-    // Description character counter
+    // Description character counter with real-time validation
     const descInput = document.getElementById('itemDescription');
     if (descInput) {
         const descCounter = descInput.parentElement.querySelector('.char-counter');
         if (descCounter) {
             descInput.addEventListener('input', function() {
                 updateCharCounter(this, descCounter);
+                validateDescriptionRealtime(this);
+            });
+            
+            descInput.addEventListener('blur', function() {
+                validateDescriptionRealtime(this);
             });
         }
     }
+    
+    // Phone number real-time validation
+    const phoneField = document.getElementById('sellerPhone');
+    if (phoneField) {
+        phoneField.addEventListener('input', function() {
+            validatePhoneNumber({ target: this });
+        });
+        
+        phoneField.addEventListener('blur', function() {
+            formatPhoneNumber({ target: this });
+        });
+    }
+}
+
+function validateTitleRealtime(input) {
+    const title = input.value.trim();
+    const errorElement = document.getElementById('titleError');
+    
+    if (!title) {
+        showFieldError(input, errorElement, 'Item title is required');
+        return false;
+    } else if (title.length < 5) {
+        showFieldError(input, errorElement, 'Title must be at least 5 characters long');
+        return false;
+    } else {
+        clearFieldError(input, errorElement);
+        return true;
+    }
+}
+
+function showFieldError(input, errorElement, message) {
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+    
+    // Add error styling to input
+    input.style.borderColor = '#ef4444';
+    input.style.boxShadow = '0 0 0 1px #ef4444';
+}
+
+function validateDescriptionRealtime(input) {
+    const description = input.value.trim();
+    const errorElement = document.getElementById('descriptionError');
+    
+    if (!description) {
+        showFieldError(input, errorElement, 'Description is required');
+        return false;
+    } else if (description.length < 20) {
+        showFieldError(input, errorElement, 'Description must be at least 20 characters long');
+        return false;
+    } else {
+        clearFieldError(input, errorElement);
+        return true;
+    }
+}
+
+function clearFieldError(input, errorElement) {
+    if (errorElement) {
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+    }
+    
+    // Remove error styling
+    input.style.borderColor = '';
+    input.style.boxShadow = '';
 }
 
 function updateCharCounter(input, counter) {
@@ -389,7 +463,7 @@ function setupImageUpload() {
         return;
     }
     
-    console.log('Setting up image upload...');
+    console.log('Setting up optimized image upload...');
     
     uploadTrigger.addEventListener('click', function() {
         console.log('Upload area clicked');
@@ -400,8 +474,8 @@ function setupImageUpload() {
         console.log('Files selected:', e.target.files);
         const files = Array.from(e.target.files);
         
-        if (files.length > 5) {
-            showError('imagesError', 'You can upload maximum 5 images');
+        if (files.length > 2) { // Reduced from 5 to 4 to help stay under 100KB
+            showError('imagesError', 'You can upload maximum 2 images to stay within size limits');
             return;
         }
         
@@ -411,9 +485,18 @@ function setupImageUpload() {
         
         if (files.length === 0) return;
         
+        // Show processing indicator
+        previewContainer.innerHTML = '<div class="processing-indicator">🔄 Optimizing images...</div>';
+        
+        // Calculate target size per image (aim for total under 100KB)
+        const targetSizePerImage = Math.floor(95000 / files.length); // 95KB divided by number of images
+        
+        let totalSize = 0;
+        let processedCount = 0;
+        
         for (const file of files) {
-            if (file.size > 5 * 1024 * 1024) {
-                showError('imagesError', `Image ${file.name} is too large. Maximum size is 5MB`);
+            if (file.size > 2 * 1024 * 1024) { // 10MB limit for source file
+                showError('imagesError', `Image ${file.name} is too large. Maximum source size is 2MB`);
                 continue;
             }
             
@@ -422,38 +505,78 @@ function setupImageUpload() {
                 continue;
             }
             
-            // Compress image
-            const compressedData = await compressImage(file, 0.7, 800); // 70% quality, max 800px
-            
-            // Store compressed image
-            window.uploadedImages.push({
-                name: file.name,
-                data: compressedData,
-                size: compressedData.length
-            });
-            
-            // Create preview
-            const previewItem = createImagePreview(compressedData, window.uploadedImages.length - 1, file.name);
-            previewContainer.appendChild(previewItem);
-            
-            console.log(`Image ${file.name} processed and stored`);
+            try {
+                // Compress with calculated target size
+                const compressedData = await compressImage(file, targetSizePerImage);
+                const estimatedSize = Math.round((compressedData.length * 3) / 4);
+                
+                // Store compressed image
+                window.uploadedImages.push({
+                    name: file.name,
+                    data: compressedData,
+                    size: estimatedSize
+                });
+                
+                totalSize += estimatedSize;
+                processedCount++;
+                
+                console.log(`Image ${file.name} processed: ${estimatedSize} bytes`);
+                
+            } catch (error) {
+                console.error(`Error processing ${file.name}:`, error);
+                showError('imagesError', `Failed to process ${file.name}. Please try a different image.`);
+            }
         }
+        
+        // Clear processing indicator
+        previewContainer.innerHTML = '';
+        
+        // Check total size
+        if (totalSize > 100000) { // 100KB limit
+            showError('imagesError', `Total image size (${Math.round(totalSize/1000)}KB) exceeds 100KB limit. Please use fewer or smaller images.`);
+            window.uploadedImages = [];
+            return;
+        }
+        
+        // Create previews for all processed images
+        window.uploadedImages.forEach((img, index) => {
+            const previewItem = createImagePreview(img.data, index, img.name, img.size);
+            previewContainer.appendChild(previewItem);
+        });
+        
+        // Show size summary
+        const sizeInfo = document.createElement('div');
+        sizeInfo.className = 'size-info';
+        sizeInfo.style.cssText = `
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #0ea5e9;
+        `;
+        sizeInfo.innerHTML = `📊 Total size: ${Math.round(totalSize/1000)}KB / 100KB`;
+        previewContainer.appendChild(sizeInfo);
+        
+        console.log(`Processed ${processedCount} images. Total size: ${totalSize} bytes`);
     });
 }
 
 // New: Image compression function
-async function compressImage(file, quality, maxSize) {
+async function compressImage(file, targetSize = 20000) { // 25KB per image max
     return new Promise((resolve) => {
         const img = new Image();
         const reader = new FileReader();
         reader.onload = (e) => {
             img.src = e.target.result;
-            img.onload = () => {
+            img.onload = async () => {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
                 
-                // Resize if larger than maxSize
+                // Start with smaller dimensions - 400px max instead of 800px
+                const maxSize = 400;
                 if (width > maxSize || height > maxSize) {
                     const ratio = Math.min(maxSize / width, maxSize / height);
                     width *= ratio;
@@ -464,20 +587,44 @@ async function compressImage(file, quality, maxSize) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', quality));
+                
+                // Start with very low quality and iterate until we get desired size
+                let quality = 0.3; // Start at 30% quality
+                let compressedData;
+                let attempts = 0;
+                const maxAttempts = 10;
+                
+                do {
+                    compressedData = canvas.toDataURL('image/jpeg', quality);
+                    const sizeInBytes = Math.round((compressedData.length * 3) / 4); // Rough base64 to bytes conversion
+                    
+                    console.log(`Compression attempt ${attempts + 1}: Quality ${quality}, Size: ${sizeInBytes} bytes`);
+                    
+                    if (sizeInBytes <= targetSize || attempts >= maxAttempts) {
+                        break;
+                    }
+                    
+                    // Reduce quality more aggressively
+                    quality *= 0.7; // Reduce by 30% each iteration
+                    attempts++;
+                } while (quality > 0.1); // Don't go below 10% quality
+                
+                console.log(`Final compression: Quality ${quality}, Estimated size: ${Math.round((compressedData.length * 3) / 4)} bytes`);
+                resolve(compressedData);
             };
         };
         reader.readAsDataURL(file);
     });
 }
 
-function createImagePreview(src, index, fileName) {
+function createImagePreview(src, index, fileName, fileSize) {
     const previewItem = document.createElement('div');
     previewItem.className = 'image-preview-item';
     previewItem.innerHTML = `
         <img src="${src}" alt="Preview ${index + 1}">
         <div class="image-preview-overlay">
             <span class="image-name">${fileName}</span>
+            <span class="image-size">${Math.round(fileSize/1000)}KB</span>
             <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
         </div>
     `;
@@ -541,83 +688,143 @@ function getPriceSuggestion(category, condition, price) {
     if (!range) return '';
     
     if (price < range.min) {
-        return `💡 Suggested range for ${category}: ₹${range.min.toLocaleString()} - ₹${range.max.toLocaleString()}`;
+        return `💡 Suggested range for ${category}: ¥${range.min.toLocaleString()} - ¥${range.max.toLocaleString()}`;
     } else if (price > range.max) {
-        return `⚠️ This seems high for ${category}. Consider pricing between ₹${range.min.toLocaleString()} - ₹${range.max.toLocaleString()}`;
+        return `⚠️ This seems high for ${category}. Consider pricing between ¥${range.min.toLocaleString()} - ¥${range.max.toLocaleString()}`;
     } else {
         return `✅ Good pricing for ${category}!`;
     }
 }
 
 // UPDATED: Enhanced form validation with phone validation
-function validateForm() {
+function validateForm(scrollToError = false) {
     let isValid = true;
+    let firstErrorElement = null;
     
     // Clear previous errors
     clearAllErrors();
     
     // Validate title
-    const title = document.getElementById('itemTitle').value.trim();
+    const titleInput = document.getElementById('itemTitle');
+    const title = titleInput.value.trim();
     if (!title) {
         showError('titleError', 'Item title is required');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = titleInput;
     } else if (title.length < 5) {
         showError('titleError', 'Title must be at least 5 characters long');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = titleInput;
     }
     
     // Validate description
-    const description = document.getElementById('itemDescription').value.trim();
+    const descriptionInput = document.getElementById('itemDescription');
+    const description = descriptionInput.value.trim();
     if (!description) {
         showError('descriptionError', 'Description is required');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = descriptionInput;
     } else if (description.length < 20) {
         showError('descriptionError', 'Description must be at least 20 characters long');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = descriptionInput;
     }
     
     // Validate category
-    if (!document.getElementById('itemCategory').value) {
+    const categoryInput = document.getElementById('itemCategory');
+    if (!categoryInput.value) {
         showError('categoryError', 'Please select a category');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = categoryInput;
     }
     
     // Validate condition
-    if (!document.getElementById('itemCondition').value) {
+    const conditionInput = document.getElementById('itemCondition');
+    if (!conditionInput.value) {
         showError('conditionError', 'Please select item condition');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = conditionInput;
     }
     
     // Validate price
-    const price = parseFloat(document.getElementById('itemPrice').value);
+    const priceInput = document.getElementById('itemPrice');
+    const price = parseFloat(priceInput.value);
     if (!price || price <= 0) {
         showError('priceError', 'Please enter a valid price');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = priceInput;
     } else if (price > 10000000) {
-        showError('priceError', 'Price cannot exceed ₹1 crore');
+        showError('priceError', 'Price cannot exceed ¥1 crore');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = priceInput;
     }
     
     // Validate location
-    if (!document.getElementById('itemLocation').value) {
+    const locationInput = document.getElementById('itemLocation');
+    if (!locationInput.value) {
         showError('locationError', 'Please select your city');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = locationInput;
     }
     
-    // NEW: Validate phone number for WhatsApp
-    const phone = document.getElementById('sellerPhone').value.replace(/\D/g, '');
+    // Validate phone number for WhatsApp
+    const phoneInput = document.getElementById('sellerPhone');
+    const phone = phoneInput.value.replace(/\D/g, '');
     if (!isValidIndianPhone(phone)) {
         showError('phoneError', 'Please enter a valid Indian mobile number for WhatsApp contact');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = phoneInput;
     }
     
     // Validate terms
-    if (!document.getElementById('agreeTerms').checked) {
+    const termsInput = document.getElementById('agreeTerms');
+    if (!termsInput.checked) {
         showError('termsError', 'You must agree to the terms');
         isValid = false;
+        if (!firstErrorElement) firstErrorElement = termsInput;
+    }
+    
+    // Scroll to first error if validation failed and scrollToError is true
+    if (!isValid && scrollToError && firstErrorElement) {
+        scrollToErrorElement(firstErrorElement);
     }
     
     return isValid;
+}
+
+function scrollToErrorElement(element) {
+    // Scroll to element
+    element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+    });
+    
+    // Highlight the element
+    element.style.animation = 'errorPulse 1s ease-in-out 2';
+    
+    // Focus on the element
+    setTimeout(() => {
+        element.focus();
+    }, 500);
+    
+    // Add CSS animation if it doesn't exist
+    if (!document.getElementById('errorAnimationCSS')) {
+        const style = document.createElement('style');
+        style.id = 'errorAnimationCSS';
+        style.textContent = `
+            @keyframes errorPulse {
+                0%, 100% { 
+                    border-color: #ef4444; 
+                    box-shadow: 0 0 0 1px #ef4444; 
+                }
+                50% { 
+                    border-color: #f87171; 
+                    box-shadow: 0 0 0 3px #fecaca; 
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 }
 
 async function submitItem() {
@@ -703,15 +910,15 @@ function collectFormData() {
 function formatPhoneForWhatsApp(phone) {
     const cleanPhone = phone.replace(/\D/g, '');
     
-    // Return in +91-XXXXXXXXXX format for WhatsApp
+    // Return in +81-XXXXXXXXXX format for WhatsApp
     if (cleanPhone.length === 10 && /^[6-9]/.test(cleanPhone)) {
-        return `+91-${cleanPhone}`;
+        return `+81-${cleanPhone}`;
     } else if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
         const mobile = cleanPhone.substring(1);
-        return `+91-${mobile}`;
+        return `+81-${mobile}`;
     } else if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) {
         const mobile = cleanPhone.substring(2);
-        return `+91-${mobile}`;
+        return `+81-${mobile}`;
     }
     
     return phone; // Return as-is if format is unexpected
@@ -761,6 +968,12 @@ async function saveItemToStorage(itemData) {
 // UPDATED: showPreview to show actual uploaded images
 function showPreview() {
     console.log('Showing preview...');
+    
+    // Validate form and scroll to error if validation fails
+    if (!validateForm(true)) { // Pass true to enable scrolling to errors
+        return; // Don't show preview if validation fails
+    }
+    
     const formData = collectFormData();
     
     // Determine what image to show in preview
@@ -774,6 +987,12 @@ function showPreview() {
     } else {
         // Show emoji icon
         previewImage = `<div class="item-image" style="font-size: 4rem; display: flex; align-items: center; justify-content: center; height: 200px; background: #f3f4f6;">${formData.image}</div>`;
+    }
+    
+    // Calculate total image size for display
+    let totalImageSize = 0;
+    if (formData.images && formData.images.length > 0) {
+        totalImageSize = formData.images.reduce((sum, img) => sum + (img.size || 0), 0);
     }
     
     const modal = document.createElement('div');
@@ -792,7 +1011,7 @@ function showPreview() {
                     </div>
                     <div class="item-content" style="padding: 16px;">
                         <h3 class="item-title" style="font-size: 1.1rem; font-weight: 600; color: #1a1a1a; margin: 0 0 8px 0;">${formData.title}</h3>
-                        <div class="item-price" style="font-size: 1.2rem; font-weight: 700; color: #3b82f6; margin-bottom: 8px;">₹${formData.price.toLocaleString()}${formData.negotiable ? ' (Negotiable)' : ''}</div>
+                        <div class="item-price" style="font-size: 1.2rem; font-weight: 700; color: #3b82f6; margin-bottom: 8px;">¥${formData.price.toLocaleString()}${formData.negotiable ? ' (Negotiable)' : ''}</div>
                         <div class="item-details" style="display: flex; gap: 12px; font-size: 0.85rem; color: #666; margin-bottom: 12px;">
                             <span>📍 ${formData.location}${formData.area ? ', ' + formData.area : ''}</span>
                             <span>${formData.condition}</span>
@@ -809,6 +1028,7 @@ function showPreview() {
                                 💬 WhatsApp Integration Ready
                             </div>
                             <div>Buyers can contact you directly via WhatsApp with pre-filled messages about your item.</div>
+                            ${totalImageSize > 0 ? `<div style="margin-top: 8px; font-size: 0.8rem; color: #666;">📊 Images optimized: ${Math.round(totalImageSize/1000)}KB total</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -898,7 +1118,7 @@ function shareNewItemOnWhatsApp() {
     const message = `🎉 Just posted a new item on MoveOut Market!
 
 *${item.title}*
-Price: ₹${item.price.toLocaleString()}${item.negotiable ? ' (Negotiable)' : ''}
+Price: ¥${item.price.toLocaleString()}${item.negotiable ? ' (Negotiable)' : ''}
 Condition: ${item.condition}
 Location: ${item.location}
 

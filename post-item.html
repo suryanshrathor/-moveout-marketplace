@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post Item - MoveOut Market</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/about.css">
+    <link rel="stylesheet" href="css/corrected-nav.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 </head>
 <body>
     <!-- Header -->
@@ -113,9 +116,9 @@
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="itemPrice">Price (₹) *</label>
+                                        <label for="itemPrice">Price (¥) *</label>
                                         <div class="price-input-container">
-                                            <span class="currency-symbol">₹</span>
+                                            <span class="currency-symbol">¥</span>
                                             <input 
                                                 type="number" 
                                                 id="itemPrice" 
@@ -148,7 +151,7 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="itemLocation">City *</label>
-                                        <select id="itemLocation" name="location" class="form-control" required>
+                                        <!-- <select id="itemLocation" name="location" class="form-control" required>
                                             <option value="">Select your city</option>
                                             <option value="Bangalore">Bangalore</option>
                                             <option value="Mumbai">Mumbai</option>
@@ -160,7 +163,15 @@
                                             <option value="Gurgaon">Gurgaon</option>
                                             <option value="Noida">Noida</option>
                                             <option value="Ahmedabad">Ahmedabad</option>
-                                        </select>
+                                        </select> -->
+                                        <input 
+                                            type="location" 
+                                            id="itemLocation" 
+                                            name="itemLocation" 
+                                            class="form-control" 
+                                            placeholder="Enter your city"
+                                            required
+                                        >
                                         <span class="error-message" id="locationError"></span>
                                     </div>
 
@@ -171,7 +182,7 @@
                                             id="itemArea" 
                                             name="area" 
                                             class="form-control" 
-                                            placeholder="e.g., Koramangala, Bandra, Connaught Place"
+                                            placeholder="e.g., Miyamirai, Ekimae-dōri, Nishikawada"
                                             maxlength="50"
                                         >
                                     </div>
@@ -188,7 +199,7 @@
                                         <div class="image-upload-area" id="uploadTrigger">
                                             <div class="upload-icon">📷</div>
                                             <p>Click to upload images</p>
-                                            <span class="upload-hint">Upload up to 5 images (JPG, PNG, max 5MB each)</span>
+                                            <span class="upload-hint">Upload up to 2 images (JPG, PNG, max 5MB each)</span>
                                         </div>
                                         <input type="file" id="itemImages" name="images" accept="image/*" multiple style="display: none;">
                                         <div id="imagePreview" class="image-preview-container"></div>
@@ -222,7 +233,7 @@
                                             id="sellerPhone" 
                                             name="sellerPhone" 
                                             class="form-control" 
-                                            placeholder="+91 XXXXX XXXXX"
+                                            placeholder="XXXXX XXXXX"
                                             required
                                             readonly
                                         >

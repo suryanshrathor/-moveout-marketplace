@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - MoveOut Market</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/contact.css">
+    <link rel="stylesheet" href="css/corrected-nav.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h2>MoveOut Market</h2>
+                    <span class="tagline">Your Moving Sale Solution</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="about.html" class="nav-link">About</a>
+                    <a href="contact.html" class="nav-link active">Contact</a>
+                    <a href="help.html" class="nav-link">Help</a>
+                </nav>
+                <div class="header-actions">
+                    <button id="loginBtn" class="btn btn--outline">Login</button>
+                    <button id="registerBtn" class="btn btn--primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-contact">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Get in Touch</h1>
+                <p class="hero-subtitle">We're here to help you with any questions or concerns about MoveOut Market</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Options -->
+    <section class="contact-options">
+        <div class="container">
+            <div class="options-grid">
+                <div class="option-card">
+                    <div class="option-icon">💬</div>
+                    <h3>WhatsApp Support</h3>
+                    <p>Get instant help on WhatsApp</p>
+                    <button class="whatsapp-btn" onclick="contactWhatsAppSupport()">
+                        💬 Chat Now
+                    </button>
+                    <div class="option-hours">Available 9 AM - 8 PM</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-icon">📧</div>
+                    <h3>Email Support</h3>
+                    <p>Send us detailed queries</p>
+                    <a href="mailto:support@moveoutmarket.com" class="btn btn--outline">
+                        Email Us
+                    </a>
+                    <div class="option-hours">Response within 24 hours</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-icon">📞</div>
+                    <h3>Phone Support</h3>
+                    <p>Talk to our support team</p>
+                    <a href="tel:+911234567890" class="btn btn--outline">
+                        Call Now
+                    </a>
+                    <div class="option-hours">Mon-Sat, 10 AM - 6 PM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-form-section">
+        <div class="container">
+            <div class="contact-content">
+                <div class="form-side">
+                    <h2>Send Us a Message</h2>
+                    <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+                    
+                    <form id="contactForm" class="contact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                                <div class="error-message" id="firstNameError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                                <div class="error-message" id="lastNameError"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required>
+                                <div class="error-message" id="emailError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="phone" placeholder="+81-XXXXXXXXXX">
+                                <div class="error-message" id="phoneError"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Subject *</label>
+                            <select id="subject" name="subject" required>
+                                <option value="">Select a topic</option>
+                                <option value="account">Account Issues</option>
+                                <option value="posting">Posting Items</option>
+                                <option value="buying">Buying Items</option>
+                                <option value="safety">Safety Concerns</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="feedback">Feedback & Suggestions</option>
+                                <option value="partnership">Business Partnership</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="error-message" id="subjectError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Message *</label>
+                            <textarea id="message" name="message" rows="6" placeholder="Please describe your inquiry in detail..." required></textarea>
+                            <div class="char-counter"><span id="messageCount">0</span>/1000</div>
+                            <div class="error-message" id="messageError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="newsletter" name="newsletter">
+                                <span class="checkmark"></span>
+                                Subscribe to updates and newsletter
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn--primary btn--large">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="info-side">
+                    <div class="contact-info">
+                        <h3>Contact Information</h3>
+                        
+                        <!-- <div class="info-item">
+                            <div class="info-icon">📍</div>
+                            <div class="info-content">
+                                <h4>Office Address</h4>
+                                <p>MoveOut Market Pvt. Ltd.<br>
+                                   Tech Hub, Electronic City<br>
+                                   Bangalore, Karnataka 560100</p>
+                            </div>
+                        </div> -->
+                        
+                        <div class="info-item">
+                            <div class="info-icon">📧</div>
+                            <div class="info-content">
+                                <h4>Email Addresses</h4>
+                                <p>General: info@moveoutmarket.com<br>
+                                   Support: support@moveoutmarket.com<br>
+                                   Business: business@moveoutmarket.com</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">📞</div>
+                            <div class="info-content">
+                                <h4>Phone Numbers</h4>
+                                <p>Support: +81-1234567890<br>
+                                   WhatsApp: +81-0987654321<br>
+                                   Business: +81-1122334455</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">🕒</div>
+                            <div class="info-content">
+                                <h4>Support Hours</h4>
+                                <p>Monday - Friday: 9:00 AM - 8:00 PM<br>
+                                   Saturday: 10:00 AM - 6:00 PM<br>
+                                   Sunday: Closed</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="social-connect">
+                        <h4>Connect With Us</h4>
+                        <div class="social-links">
+                            <a href="#" class="social-link">
+                                <span class="social-icon">📘</span>
+                                Facebook
+                            </a>
+                            <a href="#" class="social-link">
+                                <span class="social-icon">🐦</span>
+                                Twitter
+                            </a>
+                            <a href="#" class="social-link">
+                                <span class="social-icon">📸</span>
+                                Instagram
+                            </a>
+                            <a href="#" class="social-link">
+                                <span class="social-icon">💼</span>
+                                LinkedIn
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Quick Access -->
+    <section class="faq-quick">
+        <div class="container">
+            <div class="faq-header">
+                <h2>Quick Answers</h2>
+                <p>Common questions that might help you right away</p>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">How do I post an item?</div>
+                    <div class="faq-answer">
+                        <p>Click "Post Item" from the homepage, fill in the details, upload photos, and publish. It takes less than 2 minutes!</p>
+                        <a href="help.html#posting" class="faq-link">View detailed guide →</a>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is it safe to buy/sell here?</div>
+                    <div class="faq-answer">
+                        <p>Yes! We have verified profiles, secure messaging through WhatsApp, and community reporting features.</p>
+                        <a href="help.html#safety" class="faq-link">Learn about safety →</a>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How do payments work?</div>
+                    <div class="faq-answer">
+                        <p>We don't handle payments directly. Buyers and sellers arrange payment methods that work best for them.</p>
+                        <a href="help.html#payments" class="faq-link">Payment options →</a>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can I edit my listing?</div>
+                    <div class="faq-answer">
+                        <p>Yes! Go to "My Items" from your profile menu, find your item, and click "Edit" to update details or photos.</p>
+                        <a href="help.html#editing" class="faq-link">Learn how →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location Map (Optional) -->
+    <!-- <section class="location-section">
+        <div class="container">
+            <div class="location-content">
+                <h2>Visit Our Office</h2>
+                <p>Drop by if you're in Bangalore! We'd love to meet you in person.</p>
+                <div class="map-placeholder">
+                    <div class="map-info">
+                        <div class="map-icon">🗺️</div>
+                        <h3>MoveOut Market HQ</h3>
+                        <p>Electronic City, Bangalore</p>
+                        <p>Karnataka, India 560100</p>
+                        <button class="btn btn--outline" onclick="openGoogleMaps()">
+                            View on Google Maps
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>📦 MoveOut Market</h3>
+                    <p>Your trusted marketplace for pre-loved items. Making moves easier, one item at a time.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="help.html">Help & Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="help.html#faq">FAQ</a></li>
+                        <li><a href="help.html#safety">Safety Tips</a></li>
+                        <li><a href="contact.html">Report Issue</a></li>
+                        <li><a href="help.html#guides">User Guides</a></li>
+                    </ul>
+                </div>
+                <!-- <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                    </ul>
+                </div> -->
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MoveOut Market. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="js/common.js"></script>
+    <script src="js/contact.js"></script>
+    <script src="js/corrected-nav.js"></script>
+</body>
+</html>

@@ -212,7 +212,7 @@ function validateRegisterForm(userData) {
         showError('phoneError', 'Phone number is required');
         isValid = false;
     } else if (!isValidPhone(userData.phone)) {
-        showError('phoneError', 'Please enter a valid Indian phone number');
+        showError('phoneError', 'Please enter a valid phone number');
         isValid = false;
     }
     

@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - MoveOut Market</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/about.css">
+    <link rel="stylesheet" href="css/corrected-nav.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
 </head>
 <body class="auth-page">
     <div class="auth-container">
         <!-- Header -->
         <header class="auth-header">
             <div class="logo">
-                <h2>MoveOut Market</h2>
-                <span class="tagline">Your Moving Sale Solution</span>
+                <a href="index.html" style="text-decoration: none; color: inherit;">
+                    <h2>MoveOut Market</h2>
+                    <span class="tagline">Your Moving Sale Solution</span>
+                </a>
             </div>
         </header>
 
@@ -73,7 +78,7 @@
                             id="phoneNumber" 
                             name="phone" 
                             class="form-control" 
-                            placeholder="+91 XXXXX XXXXX"
+                            placeholder="XXXXX XXXXX"
                             required
                         >
                         <span class="error-message" id="phoneError"></span>
@@ -81,7 +86,7 @@
 
                     <div class="form-group">
                         <label for="location">City</label>
-                        <select id="location" name="location" class="form-control" required>
+                        <!-- <select id="location" name="location" class="form-control" required>
                             <option value="">Select your city</option>
                             <option value="Bangalore">Bangalore</option>
                             <option value="Mumbai">Mumbai</option>
@@ -91,7 +96,15 @@
                             <option value="Hyderabad">Hyderabad</option>
                             <option value="Kolkata">Kolkata</option>
                             <option value="Gurgaon">Gurgaon</option>
-                        </select>
+                        </select> -->
+                        <input 
+                            type="location" 
+                            id="location" 
+                            name="location" 
+                            class="form-control" 
+                            placeholder="Enter your city"
+                            required
+                        >
                         <span class="error-message" id="locationError"></span>
                     </div>
 
@@ -178,6 +191,33 @@
                     <button class="btn btn--primary" onclick="window.location.href='index.html'">
                         Go to Homepage
                     </button>
+                </div>
+            </div>
+            <!-- Features Section -->
+            <div class="auth-features">
+                <h3>Why Choose MoveOut Market?</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">🚀</span>
+                        <div>
+                            <h4>Quick Selling</h4>
+                            <p>List your items in minutes and reach local buyers instantly</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <div>
+                            <h4>Safe & Secure</h4>
+                            <p>Verified users and secure messaging system</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">💰</span>
+                        <div>
+                            <h4>Best Prices</h4>
+                            <p>Get the best value for your items before moving</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

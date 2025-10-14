@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Support - MoveOut Market</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/help.css">
+    <link rel="stylesheet" href="css/corrected-nav.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h2>MoveOut Market</h2>
+                    <span class="tagline">Your Moving Sale Solution</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="about.html" class="nav-link">About</a>
+                    <a href="contact.html" class="nav-link">Contact</a>
+                    <a href="help.html" class="nav-link active">Help</a>
+                </nav>
+                <div class="header-actions">
+                    <button id="loginBtn" class="btn btn--outline">Login</button>
+                    <button id="registerBtn" class="btn btn--primary">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-help">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Help & Support Center</h1>
+                <p class="hero-subtitle">Find answers, guides, and get the help you need</p>
+                
+                <!-- Search Bar -->
+                <div class="help-search">
+                    <div class="search-box">
+                        <input type="text" id="helpSearch" placeholder="Search for help topics..." class="search-input">
+                        <button class="search-btn" onclick="searchHelp()">🔍</button>
+                    </div>
+                    <div class="popular-searches">
+                        <span>Popular:</span>
+                        <button class="search-tag" onclick="searchTopic('posting items')">Posting Items</button>
+                        <button class="search-tag" onclick="searchTopic('safety')">Safety</button>
+                        <button class="search-tag" onclick="searchTopic('payments')">Payments</button>
+                        <button class="search-tag" onclick="searchTopic('account')">Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Help Categories -->
+    <section class="help-categories">
+        <div class="container">
+            <h2>Browse Help Topics</h2>
+            <div class="categories-grid">
+                <div class="category-card" onclick="scrollToSection('getting-started')">
+                    <div class="category-icon">🚀</div>
+                    <h3>Getting Started</h3>
+                    <p>New to MoveOut Market? Learn the basics</p>
+                    <span class="article-count">8 articles</span>
+                </div>
+                <div class="category-card" onclick="scrollToSection('posting-items')">
+                    <div class="category-icon">📦</div>
+                    <h3>Posting Items</h3>
+                    <p>How to create and manage your listings</p>
+                    <span class="article-count">12 articles</span>
+                </div>
+                <div class="category-card" onclick="scrollToSection('buying-selling')">
+                    <div class="category-icon">💰</div>
+                    <h3>Buying & Selling</h3>
+                    <p>Tips for successful transactions</p>
+                    <span class="article-count">15 articles</span>
+                </div>
+                <div class="category-card" onclick="scrollToSection('safety-security')">
+                    <div class="category-icon">🛡️</div>
+                    <h3>Safety & Security</h3>
+                    <p>Stay safe while buying and selling</p>
+                    <span class="article-count">10 articles</span>
+                </div>
+                <div class="category-card" onclick="scrollToSection('account-profile')">
+                    <div class="category-icon">👤</div>
+                    <h3>Account & Profile</h3>
+                    <p>Manage your account settings</p>
+                    <span class="article-count">9 articles</span>
+                </div>
+                <div class="category-card" onclick="scrollToSection('troubleshooting')">
+                    <div class="category-icon">🔧</div>
+                    <h3>Troubleshooting</h3>
+                    <p>Resolve common issues</p>
+                    <span class="article-count">7 articles</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Sections -->
+    <section class="faq-sections">
+        <div class="container">
+            
+            <!-- Getting Started -->
+            <div id="getting-started" class="faq-category">
+                <h2>🚀 Getting Started</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I create an account?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Creating an account is simple:</p>
+                            <ol>
+                                <li>Click "Sign Up" on the homepage</li>
+                                <li>Fill in your basic information (name, email, phone, city)</li>
+                                <li>Verify your email address</li>
+                                <li>Complete your profile with a profile picture</li>
+                            </ol>
+                            <p>Once registered, you can start posting items and browsing listings immediately!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            What can I buy and sell on MoveOut Market?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>You can buy and sell a wide range of pre-loved items:</p>
+                            <ul>
+                                <li><strong>Electronics:</strong> Laptops, phones, gaming consoles, cameras</li>
+                                <li><strong>Furniture:</strong> Chairs, tables, beds, storage units</li>
+                                <li><strong>Appliances:</strong> Microwaves, refrigerators, washing machines</li>
+                                <li><strong>Books:</strong> Textbooks, novels, study materials</li>
+                                <li><strong>Clothing:</strong> Branded clothes, shoes, accessories</li>
+                                <li><strong>Sports Equipment:</strong> Gym equipment, sports gear</li>
+                            </ul>
+                            <p><strong>Prohibited items:</strong> Illegal items, weapons, drugs, counterfeit goods, adult content, perishable food.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How does WhatsApp integration work?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>WhatsApp integration makes communication seamless:</p>
+                            <ul>
+                                <li>When you click "WhatsApp" on any listing, it opens WhatsApp with a pre-written message</li>
+                                <li>The message includes item details to start the conversation</li>
+                                <li>You can then chat directly with the buyer/seller</li>
+                                <li>Arrange meetings, negotiate prices, and share additional photos</li>
+                            </ul>
+                            <p><strong>Note:</strong> Make sure your phone number is correctly entered in your profile for smooth WhatsApp communication.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posting Items -->
+            <div id="posting-items" class="faq-category">
+                <h2>📦 Posting Items</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I post an item for sale?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Posting an item takes less than 2 minutes:</p>
+                            <ol>
+                                <li>Click "Post Item" from the homepage or your profile</li>
+                                <li>Add a clear, descriptive title (minimum 5 characters)</li>
+                                <li>Write a detailed description (minimum 20 characters)</li>
+                                <li>Select the appropriate category and condition</li>
+                                <li>Set your asking price (you can mark it as negotiable)</li>
+                                <li>Upload up to 4 high-quality photos</li>
+                                <li>Choose your city and area</li>
+                                <li>Review your listing and click "Post Item"</li>
+                            </ol>
+                            <p>Your item will be live immediately and visible to potential buyers!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            What makes a good listing?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Great listings have these elements:</p>
+                            <ul>
+                                <li><strong>Clear Photos:</strong> Well-lit, multiple angles, show any wear/damage</li>
+                                <li><strong>Honest Description:</strong> Mention age, condition, reason for selling</li>
+                                <li><strong>Fair Pricing:</strong> Research similar items, be realistic</li>
+                                <li><strong>Complete Information:</strong> Include brand, model, specifications</li>
+                                <li><strong>Quick Response:</strong> Reply to inquiries promptly</li>
+                            </ul>
+                            <p><strong>Pro Tips:</strong> Mention if you have original box/receipt, highlight unique features, be transparent about any issues.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Can I edit my listing after posting?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Yes! You can edit your listings anytime:</p>
+                            <ol>
+                                <li>Go to "My Items" from your profile menu</li>
+                                <li>Find the item you want to edit</li>
+                                <li>Click "Edit" button</li>
+                                <li>Update title, description, price, or photos</li>
+                                <li>Save your changes</li>
+                            </ol>
+                            <p>You can also mark items as "Sold" or delete listings you no longer want to display.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Why are my images compressed?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>We compress images to ensure fast loading and better user experience:</p>
+                            <ul>
+                                <li>Images are automatically optimized for web viewing</li>
+                                <li>Total upload size is limited to 100KB for all photos combined</li>
+                                <li>This ensures quick loading on all devices and internet connections</li>
+                                <li>Quality is maintained while reducing file size</li>
+                            </ul>
+                            <p><strong>Tips:</strong> Upload high-resolution photos - our system will optimize them. Avoid uploading already compressed or low-quality images.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buying & Selling -->
+            <div id="buying-selling" class="faq-category">
+                <h2>💰 Buying & Selling</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I contact a seller?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Contacting sellers is easy with WhatsApp integration:</p>
+                            <ol>
+                                <li>Find an item you're interested in</li>
+                                <li>Click "WhatsApp" button on the listing</li>
+                                <li>This opens WhatsApp with a pre-filled message about the item</li>
+                                <li>Send the message to start the conversation</li>
+                                <li>Ask questions, negotiate price, arrange meeting</li>
+                            </ol>
+                            <p><strong>Tips:</strong> Be specific about what you want to know, be polite, and respond promptly to build trust.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do payments work?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>MoveOut Market doesn't handle payments directly. Buyers and sellers arrange payment methods:</p>
+                            <ul>
+                                <li><strong>Cash on Delivery (COD):</strong> Most common and safest for local transactions</li>
+                                <li><strong>UPI/Digital Wallets:</strong> Quick transfers through PayTM, PhonePe, GooglePay</li>
+                                <li><strong>Bank Transfer:</strong> For higher value items, after inspection</li>
+                                <li><strong>Cash:</strong> For in-person meetings and immediate exchanges</li>
+                            </ul>
+                            <p><strong>Safety Tip:</strong> Never make full payment without seeing/inspecting the item first.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Where should I meet buyers/sellers?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Choose safe, public locations for meetups:</p>
+                            <ul>
+                                <li><strong>Recommended:</strong> Malls, coffee shops, metro stations, busy market areas</li>
+                                <li><strong>For furniture:</strong> Apartment complexes, gated communities (with permission)</li>
+                                <li><strong>For electronics:</strong> Places where you can test the item (cafes with power outlets)</li>
+                                <li><strong>Avoid:</strong> Isolated areas, late night meetings, private residences (unless you're comfortable)</li>
+                            </ul>
+                            <p><strong>Pro Tip:</strong> Bring a friend if you're unsure, meet during daytime, inform someone about your meeting.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety & Security -->
+            <div id="safety-security" class="faq-category">
+                <h2>🛡️ Safety & Security</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I identify genuine buyers/sellers?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Look for these signs of genuine users:</p>
+                            <ul>
+                                <li><strong>Complete Profile:</strong> Real name, photo, verified phone number</li>
+                                <li><strong>Clear Communication:</strong> Proper language, specific questions about the item</li>
+                                <li><strong>Reasonable Requests:</strong> Wants to see item before buying, asks relevant questions</li>
+                                <li><strong>Flexible Meeting:</strong> Suggests safe, public meeting places</li>
+                            </ul>
+                            <p><strong>Red Flags:</strong> Overly eager to buy without questions, offers way above asking price, wants to send courier, asks for advance payment, pushy behavior.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            What should I do if I encounter a scam?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>If you suspect fraudulent activity:</p>
+                            <ol>
+                                <li><strong>Don't proceed:</strong> Trust your instincts and stop communication</li>
+                                <li><strong>Document everything:</strong> Take screenshots of conversations</li>
+                                <li><strong>Report the user:</strong> Use our reporting system or contact support</li>
+                                <li><strong>Block the user:</strong> Prevent further contact</li>
+                                <li><strong>Warn others:</strong> Share experience (without personal details) to help community</li>
+                            </ol>
+                            <p><strong>Contact Support:</strong> Reach out to us at support@moveoutmarket.com or WhatsApp +81-0987654321</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How can I protect my personal information?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Keep your information safe:</p>
+                            <ul>
+                                <li><strong>Share minimal details:</strong> Only provide what's necessary for the transaction</li>
+                                <li><strong>Use WhatsApp:</strong> Keep communication within the platform initially</li>
+                                <li><strong>Don't share:</strong> Full address, financial details, personal ID numbers</li>
+                                <li><strong>Meet in public:</strong> Avoid giving away your home address</li>
+                                <li><strong>Be cautious with photos:</strong> Avoid showing personal items/documents in item photos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account & Profile -->
+            <div id="account-profile" class="faq-category">
+                <h2>👤 Account & Profile</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I update my profile information?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>To update your profile:</p>
+                            <ol>
+                                <li>Click on your name in the top-right corner</li>
+                                <li>Select "Profile" from the dropdown menu</li>
+                                <li>Click "Edit Profile" button</li>
+                                <li>Update your information (name, phone, location, bio)</li>
+                                <li>Save changes</li>
+                            </ol>
+                            <p>You can also change your profile avatar, update notification settings, and manage your account preferences from the profile page.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            How do I delete my account?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>To permanently delete your account:</p>
+                            <ol>
+                                <li>Go to your Profile page</li>
+                                <li>Scroll down to "Account Management" section</li>
+                                <li>Click "Delete Account"</li>
+                                <li>Confirm by typing "DELETE" as prompted</li>
+                                <li>Your account and all data will be permanently removed</li>
+                            </ol>
+                            <p><strong>Warning:</strong> This action cannot be undone. All your listings, messages, and account data will be permanently deleted.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div id="troubleshooting" class="faq-category">
+                <h2>🔧 Troubleshooting</h2>
+                <div class="faq-items">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            Why can't I post an item?
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Common reasons why posting might fail:</p>
+                            <ul>
+                                <li><strong>Not logged in:</strong> Make sure you're signed in to your account</li>
+                                <li><strong>Incomplete form:</strong> Fill all required fields (title, description, price, category)</li>
+                                <li><strong>Title too short:</strong> Title must be at least 5 characters</li>
+                                <li><strong>Description too short:</strong> Description must be at least 20 characters</li>
+                                <li><strong>Images too large:</strong> Total image size must be under 100KB</li>
+                                <li><strong>Invalid phone number:</strong> Enter a valid mobile number</li>
+                            </ul>
+                            <p>If the problem persists, try refreshing the page or contact support.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            WhatsApp button isn't working
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>If the WhatsApp button doesn't work:</p>
+                            <ul>
+                                <li><strong>Check if WhatsApp is installed:</strong> Make sure you have WhatsApp on your phone</li>
+                                <li><strong>Allow pop-ups:</strong> Enable pop-ups for our website in your browser</li>
+                                <li><strong>Try different browser:</strong> Some browsers block WhatsApp links</li>
+                                <li><strong>Copy phone number:</strong> If button fails, copy the phone number and message manually</li>
+                                <li><strong>Use WhatsApp Web:</strong> Try opening WhatsApp Web in another tab first</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            My images won't upload
+                            <span class="faq-toggle">+</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>If images won't upload, try these solutions:</p>
+                            <ul>
+                                <li><strong>Check file size:</strong> Each image should be under 25KB after compression</li>
+                                <li><strong>Use supported formats:</strong> JPG, PNG, GIF are supported</li>
+                                <li><strong>Limit number:</strong> Upload maximum 4 images at once</li>
+                                <li><strong>Check internet connection:</strong> Ensure stable internet connection</li>
+                                <li><strong>Try smaller images:</strong> Resize images before uploading</li>
+                                <li><strong>Clear browser cache:</strong> Refresh the page and try again</li>
+                            </ul>
+                            <p>Our system automatically compresses images to under 100KB total for optimal performance.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Support -->
+    <section class="help-contact">
+        <div class="container">
+            <div class="contact-card">
+                <div class="contact-content">
+                    <h2>Still Need Help?</h2>
+                    <p>Can't find what you're looking for? Our support team is here to help you with any questions or issues.</p>
+                    <div class="contact-options">
+                        <button class="whatsapp-btn" onclick="contactWhatsAppSupport()">
+                            💬 WhatsApp Support
+                        </button>
+                        <a href="contact.html" class="btn btn--outline">
+                            Contact Us
+                        </a>
+                        <a href="mailto:support@moveoutmarket.com" class="btn btn--outline">
+                            Email Support
+                        </a>
+                    </div>
+                    <div class="support-hours">
+                        <p>📞 Support Hours: Monday-Saturday, 9 AM - 8 PM</p>
+                        <p>📧 Email Response: Within 24 hours</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>📦 MoveOut Market</h3>
+                    <p>Your trusted marketplace for pre-loved items. Making moves easier, one item at a time.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="help.html">Help & Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#safety-security">Safety Tips</a></li>
+                        <li><a href="contact.html">Report Issue</a></li>
+                        <li><a href="#getting-started">User Guides</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MoveOut Market. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/common.js"></script>
+    <script src="js/help.js"></script>
+    <script src="js/corrected-nav.js"></script>
+</body>
+</html>

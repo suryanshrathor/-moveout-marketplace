@@ -158,7 +158,7 @@ let currentImageIndex = 0;
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const categoryFilter = document.getElementById('categoryFilter');
-const locationFilter = document.getElementById('locationFilter');
+// const locationFilter = document.getElementById('locationFilter');
 const conditionFilter = document.getElementById('conditionFilter');
 const sortSelect = document.getElementById('sortSelect');
 const itemsGrid = document.getElementById('itemsGrid');
@@ -185,12 +185,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ───────────────────────────────────────────────────────────────
 
 // Initialize the page
+// QUICK FIX: Add this to your existing code right after the DOMContentLoaded event
 document.addEventListener('DOMContentLoaded', function() {
-    loadWhatsAppStyles(); // Load WhatsApp button styles
-    loadAllItems(); // Load both sample and user items
+    loadWhatsAppStyles();
+    loadAllItems();
     setupEventListeners();
     setupFooterFilters();
-    updateHeaderForUser(); // Update header based on login status
+    updateHeaderForUser();
+    
+    // DEBUG: Uncomment to test sorting functionality
+    // setTimeout(() => testSorting(), 3000);
 });
 
 // NEW: Load WhatsApp styles
@@ -303,7 +307,7 @@ function createWhatsAppMessage(item, seller) {
 
 I'm interested in your item: *${item.title}*
 
-Price: ₹${item.price.toLocaleString()}
+Price: ¥${item.price.toLocaleString()}
 Posted: ${getTimeAgo(item.postedDate)}
 
 ${item.description.length > 100 ? item.description.substring(0, 100) + '...' : item.description}
@@ -375,7 +379,7 @@ function shareItemOnWhatsApp(itemId) {
     const message = `Check out this item on MoveOut Market:
 
 *${item.title}*
-Price: ₹${item.price.toLocaleString()}
+Price: ¥${item.price.toLocaleString()}
 Condition: ${item.condition}
 Location: ${item.location}
 
@@ -421,7 +425,9 @@ function loadAllItems() {
     // Combine with sample items
     currentItems = [...userItems, ...sampleItems];
     
-    // Sort by date (newest first)
+    console.log('Loaded all items count:', currentItems.length);
+    
+    // Apply default sorting (newest first)
     currentItems.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
     
     loadItems();
@@ -541,13 +547,13 @@ function setupEventListeners() {
         }
     });
     
-    locationFilter.addEventListener('change', () => {
-        applyFilters();
-        if (locationFilter.value) {
-            scrollToResults();
-            showHeaderFilterNotification(`Filtered by ${locationFilter.value}`);
-        }
-    });
+    // locationFilter.addEventListener('change', () => {
+    //     applyFilters();
+    //     if (locationFilter.value) {
+    //         scrollToResults();
+    //         showHeaderFilterNotification(`Filtered by ${locationFilter.value}`);
+    //     }
+    // });
     
     conditionFilter.addEventListener('change', () => {
         applyFilters();
@@ -557,9 +563,10 @@ function setupEventListeners() {
         }
     });
     
-    // Sort functionality with auto-scroll
+    // FIXED: Sort functionality with proper re-rendering
     sortSelect.addEventListener('change', () => {
         applySorting();
+        loadItems(); // ADD THIS LINE - this was missing!
         if (sortSelect.value !== 'newest') {
             scrollToResults();
             showHeaderFilterNotification(`Sorted by ${getSortDisplayName(sortSelect.value)}`);
@@ -701,7 +708,7 @@ function setupFooterFilters() {
 function filterByCategory(category) {
     if (searchInput) searchInput.value = '';
     if (categoryFilter) categoryFilter.value = category;
-    if (locationFilter) locationFilter.value = '';
+    // if (locationFilter) locationFilter.value = '';
     if (conditionFilter) conditionFilter.value = '';
     
     applyFilters();
@@ -714,7 +721,7 @@ function filterByCategory(category) {
 function clearAllFilters() {
     if (searchInput) searchInput.value = '';
     if (categoryFilter) categoryFilter.value = '';
-    if (locationFilter) locationFilter.value = '';
+    // if (locationFilter) locationFilter.value = '';
     if (conditionFilter) conditionFilter.value = '';
     
     loadAllItems(); // Reload all items
@@ -893,7 +900,7 @@ function createItemCard(item) {
         <div class="item-content">
             ${isOwnItem ? '<div class="own-item-badge">Your Item</div>' : ''}
             <h3 class="item-title">${item.title}</h3>
-            <div class="item-price">₹${item.price.toLocaleString()}</div>
+            <div class="item-price">¥${item.price.toLocaleString()}</div>
             <div class="item-details">
                 <span class="item-location">📍 ${item.location}</span>
                 <span class="item-condition">${item.condition}</span>
@@ -921,6 +928,13 @@ function performSearch() {
     
     if (searchTerm === '') {
         loadAllItems();
+        // Re-apply current sorting after loading all items
+        if (sortSelect && sortSelect.value !== 'newest') {
+            setTimeout(() => {
+                applySorting();
+                loadItems();
+            }, 100);
+        }
         return;
     }
     
@@ -931,10 +945,12 @@ function performSearch() {
         item.title.toLowerCase().includes(searchTerm) ||
         item.description.toLowerCase().includes(searchTerm) ||
         item.category.toLowerCase().includes(searchTerm) ||
-        item.location.toLowerCase().includes(searchTerm) ||
+        // item.location.toLowerCase().includes(searchTerm) ||
         item.seller.toLowerCase().includes(searchTerm)
     );
     
+    // Apply current sorting to search results
+    applySorting();
     loadItems();
 }
 
@@ -943,24 +959,36 @@ function applyFilters() {
     const userItems = JSON.parse(localStorage.getItem('marketplaceItems') || '[]');
     let allItems = [...userItems, ...sampleItems];
     
+    // Apply search term if exists
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+        allItems = allItems.filter(item => 
+            item.title.toLowerCase().includes(searchTerm) ||
+            item.description.toLowerCase().includes(searchTerm) ||
+            item.category.toLowerCase().includes(searchTerm) ||
+            // item.location.toLowerCase().includes(searchTerm) ||
+            item.seller.toLowerCase().includes(searchTerm)
+        );
+    }
+    
     const category = categoryFilter.value;
-    const location = locationFilter.value;
+    // const location = locationFilter.value;
     const condition = conditionFilter.value;
     
     if (category) {
         allItems = allItems.filter(item => item.category === category);
     }
     
-    if (location) {
-        allItems = allItems.filter(item => item.location === location);
-    }
+    // if (location) {
+    //     allItems = allItems.filter(item => item.location === location);
+    // }
     
     if (condition) {
         allItems = allItems.filter(item => item.condition === condition);
     }
     
     currentItems = allItems;
-    applySorting();
+    applySorting(); // Apply current sorting
     loadItems();
 }
 
@@ -968,18 +996,41 @@ function applyFilters() {
 function applySorting() {
     const sortValue = sortSelect.value;
     
+    console.log('Applying sort:', sortValue); // Debug log
+    
     switch(sortValue) {
         case 'price-low':
-            currentItems.sort((a, b) => a.price - b.price);
+            currentItems.sort((a, b) => {
+                const priceA = parseFloat(a.price) || 0;
+                const priceB = parseFloat(b.price) || 0;
+                return priceA - priceB;
+            });
+            console.log('Sorted by price low to high'); // Debug log
             break;
         case 'price-high':
-            currentItems.sort((a, b) => b.price - a.price);
+            currentItems.sort((a, b) => {
+                const priceA = parseFloat(a.price) || 0;
+                const priceB = parseFloat(b.price) || 0;
+                return priceB - priceA;
+            });
+            console.log('Sorted by price high to low'); // Debug log
             break;
         case 'newest':
         default:
-            currentItems.sort((a, b) => new Date(b.postedDate) - new Date(a.postedDate));
+            currentItems.sort((a, b) => {
+                const dateA = new Date(a.postedDate);
+                const dateB = new Date(b.postedDate);
+                return dateB - dateA; // Newest first
+            });
+            console.log('Sorted by newest first'); // Debug log
             break;
     }
+    
+    console.log('Items after sorting:', currentItems.slice(0, 3).map(item => ({
+        title: item.title,
+        price: item.price,
+        date: item.postedDate
+    })));
 }
 
 // UPDATED: showItemDetails function with WhatsApp integration
@@ -1037,7 +1088,7 @@ function showItemDetails(item) {
             <div class="modal-body">
                 ${imageGalleryHTML}
                 <div class="item-details-full">
-                    <div class="price-large">₹${item.price.toLocaleString()}</div>
+                    <div class="price-large">¥${item.price.toLocaleString()}</div>
                     <div class="item-meta">
                         <span><strong>Category:</strong> ${item.category}</span>
                         <span><strong>Condition:</strong> ${item.condition}</span>
@@ -1178,4 +1229,67 @@ function isLoggedIn() {
 function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     return userStr ? JSON.parse(userStr) : null;
+}
+
+function sortItems(sortType = null) {
+    const sortValue = sortType || sortSelect.value;
+    
+    console.log('Sorting items by:', sortValue);
+    
+    switch(sortValue) {
+        case 'price-low':
+            currentItems.sort((a, b) => {
+                const priceA = parseFloat(a.price) || 0;
+                const priceB = parseFloat(b.price) || 0;
+                return priceA - priceB;
+            });
+            break;
+        case 'price-high':
+            currentItems.sort((a, b) => {
+                const priceA = parseFloat(a.price) || 0;
+                const priceB = parseFloat(b.price) || 0;
+                return priceB - priceA;
+            });
+            break;
+        case 'newest':
+        default:
+            currentItems.sort((a, b) => {
+                const dateA = new Date(a.postedDate);
+                const dateB = new Date(b.postedDate);
+                return dateB - dateA;
+            });
+            break;
+    }
+    
+    // Update the dropdown value if sorting was called programmatically
+    if (sortType && sortSelect) {
+        sortSelect.value = sortType;
+    }
+    
+    // Re-render items
+    loadItems();
+    
+    // Show notification
+    showHeaderFilterNotification(`Sorted by ${getSortDisplayName(sortValue)}`);
+}
+
+function testSorting() {
+    console.log('Testing sorting functionality...');
+    console.log('Current items count:', currentItems.length);
+    
+    // Test price low to high
+    console.log('\n--- Testing Price Low to High ---');
+    sortItems('price-low');
+    
+    setTimeout(() => {
+        // Test price high to low
+        console.log('\n--- Testing Price High to Low ---');
+        sortItems('price-high');
+        
+        setTimeout(() => {
+            // Test newest
+            console.log('\n--- Testing Newest First ---');
+            sortItems('newest');
+        }, 2000);
+    }, 2000);
 }

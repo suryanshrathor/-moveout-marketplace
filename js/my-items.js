@@ -180,7 +180,7 @@ function shareItemOnWhatsApp(itemId) {
     const message = `Check out my item on MoveOut Market:
 
 *${item.title}*
-Price: ₹${item.price.toLocaleString()}
+Price: ¥${item.price.toLocaleString()}
 Condition: ${item.condition}
 Location: ${item.location}
 
@@ -438,7 +438,7 @@ function createMyItemCard(item) {
         <div class="item-details-section">
             <div class="item-header">
                 <h3 class="item-title">${item.title}</h3>
-                <div class="item-price">₹${item.price.toLocaleString()}</div>
+                <div class="item-price">¥${item.price.toLocaleString()}</div>
             </div>
             <div class="item-meta">
                 <span class="item-location">📍 ${item.location}</span>
@@ -449,7 +449,7 @@ function createMyItemCard(item) {
                 <span class="stat-item">👁️ ${item.views} views</span>
                 <span class="stat-item">💬 ${item.inquiries} inquiries</span>
             </div>
-            <div class="item-whatsapp-section" style="margin: 12px 0; padding: 8px; background: #f0f9ff; border-radius: 6px;">
+            <div class="item-whatsapp-section" style="margin: 12px 0; padding: 8px; background: #323434; border-radius: 6px;">
                 <p style="font-size: 0.75rem; color: #0ea5e9; margin: 0 0 6px 0;">Share with potential buyers:</p>
                 <div style="display: flex; gap: 8px;">
                     <button class="whatsapp-share-btn" onclick="shareItemOnWhatsApp('${item.id}')" title="Share on WhatsApp">
@@ -609,7 +609,7 @@ function showEditModal(item) {
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label for="editPrice">Price (₹) *</label>
+                <label for="editPrice">Price (¥) *</label>
                 <input type="number" id="editPrice" value="${item.price}" class="form-control" required min="1">
             </div>
             <div class="form-group">
@@ -639,18 +639,14 @@ function showEditModal(item) {
             </div>
             <div class="form-group">
                 <label for="editLocation">Location *</label>
-                <select id="editLocation" class="form-control" required>
-                    <option value="Bangalore" ${item.location === 'Bangalore' ? 'selected' : ''}>Bangalore</option>
-                    <option value="Mumbai" ${item.location === 'Mumbai' ? 'selected' : ''}>Mumbai</option>
-                    <option value="Delhi" ${item.location === 'Delhi' ? 'selected' : ''}>Delhi</option>
-                    <option value="Pune" ${item.location === 'Pune' ? 'selected' : ''}>Pune</option>
-                    <option value="Chennai" ${item.location === 'Chennai' ? 'selected' : ''}>Chennai</</option>
-                    <option value="Hyderabad" ${item.location === 'Hyderabad' ? 'selected' : ''}>Hyderabad</option>
-                    <option value="Kolkata" ${item.location === 'Kolkata' ? 'selected' : ''}>Kolkata</option>
-                    <option value="Gurgaon" ${item.location === 'Gurgaon' ? 'selected' : ''}>Gurgaon</option>
-                    <option value="Noida" ${item.location === 'Noida' ? 'selected' : ''}>Noida</option>
-                    <option value="Ahmedabad" ${item.location === 'Ahmedabad' ? 'selected' : ''}>Ahmedabad</option>
-                </select>
+                <input
+                    type="text"
+                    id="editLocation"
+                    class="form-control"
+                    required
+                    value="${item.location}"
+                    placeholder="Enter your location"
+                />
             </div>
         </div>
         <div class="form-group">

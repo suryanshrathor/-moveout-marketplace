@@ -19,11 +19,17 @@ function initializeProfilePage() {
     }
     
     setupEventListeners();
-    loadUserProfile();
-    loadNotifications();
-    loadAnalytics();
-    loadRecentActivity();
-    updateHeaderForUser();
+    
+    // Load profile with refresh option
+    loadUserProfile().then(() => {
+        loadNotifications();
+        loadAnalytics();
+        loadRecentActivity();
+        updateHeaderForUser();
+    }).catch(error => {
+        console.error('Error initializing profile:', error);
+        showToast('Error loading profile. Please refresh the page.', 'error');
+    });
 }
 
 function setupEventListeners() {
@@ -129,32 +135,97 @@ function setupEventListeners() {
     });
 }
 
-function updateHeaderForUser() {
-    const currentUser = getCurrentUser();
-    const userMenuBtn = document.getElementById('userMenuBtn');
-    if (currentUser && userMenuBtn) {
-        userMenuBtn.textContent = `Hi, ${currentUser.firstName}`;
+async function updateHeaderForUser() {
+    try {
+        // Get fresh user data
+        const currentUser = await refreshCurrentUser() || getCurrentUser();
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        
+        if (currentUser && userMenuBtn) {
+            userMenuBtn.textContent = `Hi, ${currentUser.firstName || 'User'}`;
+        }
+        
+        // Also update any other header elements that show user info
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerAvatar && currentUser) {
+            headerAvatar.textContent = currentUser.avatar || '👤';
+        }
+    } catch (error) {
+        console.error('Error updating header for user:', error);
+        // Fallback to basic update
+        const currentUser = getCurrentUser();
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        if (currentUser && userMenuBtn) {
+            userMenuBtn.textContent = `Hi, ${currentUser.firstName || 'User'}`;
+        }
     }
 }
 
 // Profile Data Management
-function loadUserProfile() {
+async function loadUserProfile() {
     const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.error('No current user found');
+        return;
+    }
     
-    // Load profile data (extend currentUser or create separate profile)
-    currentUserProfile = {
-        ...currentUser,
-        avatar: currentUser.avatar || '👤',
-        bio: currentUser.bio || '',
-        memberSince: currentUser.memberSince || '2024-10-01',
-        darkMode: localStorage.getItem('darkMode') === 'true',
-        emailNotifications: localStorage.getItem('emailNotifications') !== 'false',
-        pushNotifications: localStorage.getItem('pushNotifications') !== 'false',
-        ...JSON.parse(localStorage.getItem('userProfile') || '{}')
-    };
+    // Start with loading indicator
+    showLoadingProfile(true);
     
-    updateProfileDisplay();
+    try {
+        // First try to fetch fresh data from cloud
+        let cloudUserData = await loadUserFromBin();
+        
+        if (cloudUserData) {
+            // Use cloud data as primary source
+            currentUserProfile = {
+                ...cloudUserData,
+                // Merge with any local-only settings
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                emailNotifications: localStorage.getItem('emailNotifications') !== 'false',
+                pushNotifications: localStorage.getItem('pushNotifications') !== 'false',
+                // Override with any local profile extensions
+                ...JSON.parse(localStorage.getItem('userProfileExtensions') || '{}')
+            };
+            
+            // Update localStorage with fresh cloud data
+            localStorage.setItem('currentUser', JSON.stringify(cloudUserData));
+            console.log('Profile loaded from cloud data');
+            showToast('Profile synced with cloud', 'success', 2000);
+        } else {
+            // Fallback to localStorage if cloud data unavailable
+            console.log('Using localStorage fallback for profile');
+            currentUserProfile = {
+                ...currentUser,
+                avatar: currentUser.avatar || '👤',
+                bio: currentUser.bio || '',
+                memberSince: currentUser.memberSince || '2024-10-01',
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                emailNotifications: localStorage.getItem('emailNotifications') !== 'false',
+                pushNotifications: localStorage.getItem('pushNotifications') !== 'false',
+                ...JSON.parse(localStorage.getItem('userProfile') || '{}')
+            };
+            showToast('Using cached profile data', 'warning', 3000);
+        }
+        
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        // Use localStorage as fallback on error
+        currentUserProfile = {
+            ...currentUser,
+            avatar: currentUser.avatar || '👤',
+            bio: currentUser.bio || '',
+            memberSince: currentUser.memberSince || '2024-10-01',
+            darkMode: localStorage.getItem('darkMode') === 'true',
+            emailNotifications: localStorage.getItem('emailNotifications') !== 'false',
+            pushNotifications: localStorage.getItem('pushNotifications') !== 'false',
+            ...JSON.parse(localStorage.getItem('userProfile') || '{}')
+        };
+        showToast('Error loading profile, using cached data', 'error');
+    }
+    
+    showLoadingProfile(false);
+    await updateProfileDisplay();
 }
 
 async function loadUserItems() {
@@ -189,64 +260,82 @@ async function loadUserItems() {
 async function updateProfileDisplay() {
     const profile = currentUserProfile;
     
-    // Update profile info
+    // Update profile info with null checks
     const userAvatar = document.getElementById('userAvatar');
-    if (userAvatar) userAvatar.textContent = profile.avatar;
+    if (userAvatar) userAvatar.textContent = profile.avatar || '👤';
     
     const userName = document.getElementById('userName');
-    if (userName) userName.textContent = `${profile.firstName} ${profile.lastName}`;
+    if (userName) userName.textContent = `${profile.firstName || 'Unknown'} ${profile.lastName || 'User'}`;
     
     const userEmail = document.getElementById('userEmail');
-    if (userEmail) userEmail.textContent = `${profile.email}`;
+    if (userEmail) userEmail.textContent = profile.email || 'Not provided';
     
     const userPhone = document.getElementById('userPhone');
-    if (userPhone) userPhone.textContent = `${profile.phone}`;
+    if (userPhone) userPhone.textContent = profile.phone || 'Not provided';
     
     const userLocation = document.getElementById('userLocation');
-    if (userLocation) userLocation.textContent = `${profile.location}` || 'Not set';
+    if (userLocation) userLocation.textContent = profile.location || 'Not set';
+    
+    const userBio = document.getElementById('userBio');
+    if (userBio) {
+        userBio.textContent = profile.bio || 'No bio provided';
+        // Show/hide bio section based on content
+        const bioSection = userBio.closest('.profile-section');
+        if (bioSection) {
+            bioSection.style.display = profile.bio ? 'block' : 'none';
+        }
+    }
     
     const memberSince = document.getElementById('memberSince');
-    if (memberSince) memberSince.textContent = `Member since: ${formatDate(profile.memberSince)}`;
+    if (memberSince) {
+        const memberDate = profile.memberSince || profile.createdAt || '2024-10-01';
+        memberSince.textContent = `Member since: ${formatDate(memberDate)}`;
+    }
     
-    // Update settings
+    // Update settings toggles
     const darkModeToggle = document.getElementById('darkModeToggle');
-    if (darkModeToggle) darkModeToggle.checked = profile.darkMode;
+    if (darkModeToggle) darkModeToggle.checked = profile.darkMode || false;
     
     const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
-    if (emailNotificationsToggle) emailNotificationsToggle.checked = profile.emailNotifications;
+    if (emailNotificationsToggle) emailNotificationsToggle.checked = profile.emailNotifications !== false;
     
     const pushNotificationsToggle = document.getElementById('pushNotificationsToggle');
-    if (pushNotificationsToggle) pushNotificationsToggle.checked = profile.pushNotifications;
+    if (pushNotificationsToggle) pushNotificationsToggle.checked = profile.pushNotifications !== false;
     
-    // Load user items count
-    const userItems = await loadUserItems();
-    const soldItems = userItems.filter(item => item.status === 'sold');
-    
-    const totalItemsPosted = document.getElementById('totalItemsPosted');
-    if (totalItemsPosted) totalItemsPosted.textContent = userItems.length;
-    
-    const totalItemsSold = document.getElementById('totalItemsSold');
-    if (totalItemsSold) totalItemsSold.textContent = soldItems.length;
+    // Load user statistics
+    await updateUserStatistics();
 }
 
 async function saveUserProfile() {
+    // Save to localStorage first for immediate UI updates
     localStorage.setItem('userProfile', JSON.stringify(currentUserProfile));
     
+    // Update current user object
     const currentUser = getCurrentUser();
     const updatedUser = { ...currentUser, ...currentUserProfile };
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     
-    if (window.jsonBinService && typeof window.jsonBinService.updateUser === 'function') {
-        try {
-            await jsonBinService.updateUser(String(currentUser.id), updatedUser);
-            console.log('User profile synced with JSONBin');
-        } catch (error) {
-            console.error('Failed to sync user profile with JSONBin:', error);
-            showToast('Profile updated locally but failed to sync with cloud', 'error');
+    // Try to sync with cloud
+    try {
+        const cloudSyncSuccess = await syncUserWithCloud(updatedUser);
+        
+        if (cloudSyncSuccess) {
+            console.log('User profile synced with cloud successfully');
+            
+            // Store any local-only extensions separately
+            const localExtensions = {
+                darkMode: currentUserProfile.darkMode,
+                emailNotifications: currentUserProfile.emailNotifications,
+                pushNotifications: currentUserProfile.pushNotifications
+            };
+            localStorage.setItem('userProfileExtensions', JSON.stringify(localExtensions));
+        } else {
+            console.warn('Failed to sync with cloud, data saved locally');
+            showToast('Profile updated locally (sync with cloud failed)', 'warning');
         }
-    } else {
-        console.warn('jsonBinService.updateUser is not available, saving locally only');
-        showToast('Profile updated locally (cloud sync unavailable)', 'warning');
+    } catch (error) {
+        console.error('Error syncing profile:', error);
+        showToast('Profile updated locally but cloud sync failed', 'error');
     }
 }
 
@@ -290,7 +379,7 @@ function closeEditProfileModal() {
     }
 }
 
-function saveProfileChanges() {
+async function saveProfileChanges() {
     // Get form values
     const firstName = document.getElementById('editFirstName')?.value.trim();
     const lastName = document.getElementById('editLastName')?.value.trim();
@@ -304,22 +393,41 @@ function saveProfileChanges() {
         return;
     }
     
-    // Update profile
-    currentUserProfile = {
-        ...currentUserProfile,
-        firstName,
-        lastName,
-        phone,
-        location,
-        bio
-    };
+    // Show saving indicator
+    const saveBtn = document.querySelector('#editProfileModal .btn-primary');
+    const originalText = saveBtn?.textContent;
+    if (saveBtn) {
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+    }
     
-    saveUserProfile();
-    updateProfileDisplay();
-    closeEditProfileModal();
-    
-    showToast('Profile updated successfully!', 'success');
-    addNotification('Profile updated', 'You updated your profile information', 'profile');
+    try {
+        // Update profile
+        currentUserProfile = {
+            ...currentUserProfile,
+            firstName,
+            lastName,
+            phone,
+            location,
+            bio
+        };
+        
+        await saveUserProfile();
+        updateProfileDisplay();
+        closeEditProfileModal();
+        
+        showToast('Profile updated successfully!', 'success');
+        addNotification('Profile updated', 'You updated your profile information', 'profile');
+    } catch (error) {
+        console.error('Error saving profile changes:', error);
+        showToast('Error saving profile changes', 'error');
+    } finally {
+        // Reset button
+        if (saveBtn && originalText) {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+        }
+    }
 }
 
 function setupBioCharCounter() {
@@ -517,7 +625,7 @@ async function loadAnalytics() {
     if (totalInquiriesAnalytics) totalInquiriesAnalytics.textContent = totalInquiries;
     
     const totalEarningsAnalytics = document.getElementById('totalEarningsAnalytics');
-    if (totalEarningsAnalytics) totalEarningsAnalytics.textContent = `₹${totalEarnings.toLocaleString()}`;
+    if (totalEarningsAnalytics) totalEarningsAnalytics.textContent = `¥${totalEarnings.toLocaleString()}`;
     
     const averageRatingAnalytics = document.getElementById('averageRatingAnalytics');
     if (averageRatingAnalytics) averageRatingAnalytics.textContent = '4.8'; // Mock rating
@@ -616,7 +724,7 @@ async function loadRecentActivity() {
         if (item.status === 'sold') {
             activities.push({
                 icon: '💰',
-                text: `You sold "${item.title}" for ₹${item.price.toLocaleString()}`,
+                text: `You sold "${item.title}" for ¥${item.price.toLocaleString()}`,
                 time: formatTimeAgo(item.lastUpdated || item.postedDate),
                 type: 'sale'
             });
@@ -1004,4 +1112,175 @@ function isLoggedIn() {
 function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     return userStr ? JSON.parse(userStr) : null;
+}
+
+async function loadUserFromBin() {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.id) {
+        console.error('No current user found');
+        return null;
+    }
+    
+    try {
+        // First try to get user from JSONBin user service
+        if (window.jsonBinService && typeof window.jsonBinService.getUser === 'function') {
+            const cloudUserData = await jsonBinService.getUser(String(currentUser.id));
+            if (cloudUserData) {
+                console.log('User data fetched from cloud successfully');
+                return cloudUserData;
+            }
+        }
+        
+        // Fallback: try to get from users collection if getUser doesn't exist
+        if (window.jsonBinService && typeof window.jsonBinService.getAllUsers === 'function') {
+            const allUsers = await jsonBinService.getAllUsers();
+            const userData = allUsers.find(user => String(user.id) === String(currentUser.id));
+            if (userData) {
+                console.log('User data found in users collection');
+                return userData;
+            }
+        }
+        
+        console.warn('User not found in cloud storage');
+        return null;
+    } catch (error) {
+        console.error('Error fetching user from cloud:', error);
+        return null;
+    }
+}
+
+async function syncUserWithCloud(userData) {
+    try {
+        if (window.jsonBinService && typeof window.jsonBinService.updateUser === 'function') {
+            await jsonBinService.updateUser(String(userData.id), userData);
+            console.log('User data synced with cloud');
+            return true;
+        } else {
+            console.warn('jsonBinService.updateUser not available');
+            return false;
+        }
+    } catch (error) {
+        console.error('Failed to sync user with cloud:', error);
+        return false;
+    }
+}
+
+async function refreshCurrentUser() {
+    const localUser = getCurrentUser();
+    if (!localUser) return null;
+    
+    try {
+        const cloudUser = await loadUserFromBin();
+        if (cloudUser) {
+            // Update localStorage with fresh user data
+            localStorage.setItem('currentUser', JSON.stringify(cloudUser));
+            return cloudUser;
+        }
+        return localUser;
+    } catch (error) {
+        console.error('Error refreshing user data:', error);
+        return localUser;
+    }
+}
+
+async function updateUserStatistics() {
+    try {
+        const userItems = await loadUserItems();
+        const soldItems = userItems.filter(item => item.status === 'sold');
+        
+        // Update item counts
+        const totalItemsPosted = document.getElementById('totalItemsPosted');
+        if (totalItemsPosted) totalItemsPosted.textContent = userItems.length || 0;
+        
+        const totalItemsSold = document.getElementById('totalItemsSold');
+        if (totalItemsSold) totalItemsSold.textContent = soldItems.length || 0;
+        
+        // Calculate total earnings
+        const totalEarnings = soldItems.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
+        const totalEarningsDisplay = document.getElementById('totalEarnings');
+        if (totalEarningsDisplay) totalEarningsDisplay.textContent = `¥${totalEarnings.toLocaleString()}`;
+        
+        // Calculate success rate
+        const successRate = userItems.length > 0 ? Math.round((soldItems.length / userItems.length) * 100) : 0;
+        const successRateDisplay = document.getElementById('successRate');
+        if (successRateDisplay) successRateDisplay.textContent = `${successRate}%`;
+        
+    } catch (error) {
+        console.error('Error updating user statistics:', error);
+        // Set default values on error
+        const totalItemsPosted = document.getElementById('totalItemsPosted');
+        if (totalItemsPosted) totalItemsPosted.textContent = '0';
+        
+        const totalItemsSold = document.getElementById('totalItemsSold');
+        if (totalItemsSold) totalItemsSold.textContent = '0';
+    }
+}
+
+function showLoadingProfile(show) {
+    const profileContainer = document.getElementById('profileContainer') || document.querySelector('.profile-container');
+    let loadingIndicator = document.getElementById('profileLoading');
+    
+    if (show) {
+        if (profileContainer) profileContainer.style.opacity = '0.5';
+        if (!loadingIndicator) {
+            // Create loading indicator if it doesn't exist
+            loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'profileLoading';
+            loadingIndicator.className = 'profile-loading';
+            loadingIndicator.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                text-align: center;
+            `;
+            loadingIndicator.innerHTML = `
+                <div class="loading-spinner" style="
+                    width: 40px;
+                    height: 40px;
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #007bff;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 10px;
+                "></div>
+                <div class="loading-text">Loading profile...</div>
+            `;
+            document.body.appendChild(loadingIndicator);
+            
+            // Add CSS animation if not exists
+            if (!document.querySelector('#loading-spinner-css')) {
+                const style = document.createElement('style');
+                style.id = 'loading-spinner-css';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        } else {
+            loadingIndicator.style.display = 'block';
+        }
+    } else {
+        if (profileContainer) profileContainer.style.opacity = '1';
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+    }
+}
+
+async function refreshProfileData() {
+    showToast('Refreshing profile data...', 'info');
+    try {
+        await loadUserProfile();
+        showToast('Profile data refreshed!', 'success');
+    } catch (error) {
+        console.error('Error refreshing profile:', error);
+        showToast('Failed to refresh profile data', 'error');
+    }
 }
