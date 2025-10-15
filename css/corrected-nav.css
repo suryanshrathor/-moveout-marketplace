@@ -819,7 +819,7 @@ select.form-control {
 }
 
 /* Header Actions Improvements */
-.header-actions {
+.header-action {
     display: flex;
     gap: var(--space-16);
     align-items: center;

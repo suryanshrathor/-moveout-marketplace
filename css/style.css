@@ -7981,6 +7981,8 @@ select.form-control {
     justify-content: center;
     gap: var(--space-8);
     margin-bottom: var(--space-16);
+    flex-direction: row;
+    justify-content: center;
 }
 
 .action-btn {
