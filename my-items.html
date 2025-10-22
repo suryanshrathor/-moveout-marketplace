@@ -181,6 +181,14 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                location.reload();
+            }
+        });
+    </script>
+
     <script src="js/jsonbin-service.js"></script>
     <script src="js/my-items.js"></script>
     <script src="js/simple-force-refresh.js"></script>

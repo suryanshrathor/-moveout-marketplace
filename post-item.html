@@ -324,6 +324,14 @@
     <!-- Modal container - Modals will be created here by JavaScript -->
     <div id="modal-container"></div>
 
+    <script>
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                location.reload();
+            }
+        });
+    </script>
+
     <script src="js/jsonbin-service.js"></script>
     <script src="js/post-item.js"></script>
     <script src="js/simple-force-refresh.js"></script>

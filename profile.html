@@ -388,6 +388,14 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                location.reload();
+            }
+        });
+    </script>
+
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>

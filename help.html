@@ -528,6 +528,14 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible") {
+                location.reload();
+            }
+        });
+    </script>
+
     <script src="js/common.js"></script>
     <script src="js/help.js"></script>
     <script src="js/corrected-nav.js"></script>
